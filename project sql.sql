@@ -8,6 +8,23 @@ CREATE TABLE Users (
 
 
 
+
+DELIMITER //
+CREATE PROCEDURE NewLogin(
+  IN usernm varchar(255),
+  IN token varchar(255)
+)
+    BEGIN
+    INSERT INTO Users (Username, TokenP)
+    Values (usernm, token);
+
+    End //
+DELIMITER ;
+
+
+
+
+
 DELIMITER //
  CREATE PROCEDURE Login(
   IN usernm varchar(255),
