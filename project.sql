@@ -9,6 +9,26 @@ CREATE TABLE Users (
    PRIMARY KEY (PersonID)
 );
 
+
+-- add more to GetUser at a later time
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS GetUser;
+CREATE PROCEDURE GetUser(
+  IN usernm varchar(255),
+  IN dummy varchar(255)
+)
+
+  BEGIN
+    SELECT Username FROM Users
+    WHERE Username = usernm;
+  END //
+DELIMITER;
+
+
+
+
+
 DELIMITER //
 DROP PROCEDURE IF EXISTS GetSalty;
 CREATE PROCEDURE GetSalty(
