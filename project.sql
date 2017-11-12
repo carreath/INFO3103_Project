@@ -12,10 +12,11 @@ CREATE TABLE Users (
 DELIMITER //
 DROP PROCEDURE IF EXISTS GetSalty;
 CREATE PROCEDURE GetSalty(
-  IN usernm varchar(255)
+  IN usernm varchar(255),
+  IN dummy varchar(255)
 )
 
-  BEGIN 
+  BEGIN
     SELECT SaltyToken FROM Users
     WHERE Username = usernm;
   END //
