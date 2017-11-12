@@ -2,12 +2,23 @@ CREATE TABLE Users (
    PersonID int NOT NULL AUTO_INCREMENT,
    Username varchar(255) NOT NULL,
    TokenP varchar(255) NOT NULL,
-
+   SessionToken varchar(255),
    PRIMARY KEY (PersonID)
 );
 
+DELIMITER //
+CREATE PROCEDURE SessionUpdate(
+  IN SessionT varchar(255),
+  IN usernm varchar(255)
+)
+  BEGIN
 
+  UPDATE Users
+  SET SessionToken = SessionT
+  WHERE Username = usernm;
 
+  END //
+DELIMITER ;
 
 DELIMITER //
 CREATE PROCEDURE NewLogin(
@@ -16,13 +27,10 @@ CREATE PROCEDURE NewLogin(
 )
     BEGIN
     INSERT INTO Users (Username, TokenP)
-    Values (usernm, token);
+    VALUES (usernm, token);
 
     End //
 DELIMITER ;
-
-
-
 
 
 DELIMITER //
