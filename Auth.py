@@ -25,6 +25,17 @@ class Authentication():
 
                 return false
 
+class Logout(Resource):
+        def post(self):
+                args = parser.parse_args()
+                try:
+                        DBConnection.callproc("Logout", (args['sessionToken'], ""))
+                		DBConnection.commit()
+                except SQLAlchemyError:
+                        DBConnection.rollback()
+
+                return {"status": 200}
+
 class Login(Resource):
         def post(self):
                 args = parser.parse_args()
