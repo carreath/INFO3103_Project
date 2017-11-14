@@ -9,6 +9,17 @@ CREATE TABLE Users (
    PRIMARY KEY (PersonID)
 );
 
+Drop Table Users;
+CREATE TABLE Image (
+   ImageID int NOT NULL AUTO_INCREMENT,
+   Name varchar(255) NOT NULL,
+   FileSize varchar(255) NOT NULL,
+   Extension varchar(255) NOT NULL,
+   FileLocation varchar(255) NOT NULL,
+   UserID varchar(255),
+   PRIMARY KEY (PersonID)
+);
+
 
 -- add more to GetUser at a later time
 
