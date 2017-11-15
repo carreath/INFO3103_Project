@@ -323,6 +323,16 @@ CREATE PROCEDURE getTags(
 		ON t.tag_id = s.tag_id
     WHERE post_id = s.post_id;
   END //
+  
+CREATE PROCEDURE AddTag(
+  IN post_id int,
+  IN tag_id
+  )
+  BEGIN
+    INSERT INTO Tags (post_id, tag_id)
+    	VALUES (post_id, tag_id);
+    SELECT LAST_INSERT_ID;
+  END //
 
 CREATE PROCEDURE GetPosts(
   IN tag_id int
