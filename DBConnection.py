@@ -3,12 +3,21 @@ import pymysql.cursors
 import settings
 
 class DatabaseConnection():            
-        def callproc(proc, args):
+        def  callprocONE(proc, args):
                 dbConnection = pymysql.connect('localhost',settings.DBUSER,settings.DBPASSWD,settings.DBDATABASE,charset='utf8mb4',cursorclass= pymysql.cursors.DictCursor)
                 cursor = dbConnection.cursor()
-                cursor.callproc(proc, args)
+                cursor. callprocONE(proc, args)
                 dbConnection.commit()
                 result = cursor.fetchone()
+                dbConnection.close()
+                return result    
+
+        def  callprocALL(proc, args):
+                dbConnection = pymysql.connect('localhost',settings.DBUSER,settings.DBPASSWD,settings.DBDATABASE,charset='utf8mb4',cursorclass= pymysql.cursors.DictCursor)
+                cursor = dbConnection.cursor()
+                cursor. callprocONE(proc, args)
+                dbConnection.commit()
+                result = cursor.fetchall()
                 dbConnection.close()
                 return result
             

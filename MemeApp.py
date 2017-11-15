@@ -4,11 +4,19 @@ from flask_restful import Resource, Api
 import math 
 import settings 
 from Auth import auth 
+from Profile import profile 
+from Image import image 
+from Comment import comment 
+from Post import post 
  
 app = Flask(__name__, static_url_path='/static') 
 api = Api(app) 
  
 app.register_blueprint(auth) 
+app.register_blueprint(profile) 
+app.register_blueprint(image) 
+app.register_blueprint(comment) 
+app.register_blueprint(post) 
  
 class Root(Resource): 
    # get method. What might others be aptly named? (hint: post) 

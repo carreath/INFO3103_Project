@@ -11,26 +11,25 @@ api = Api(auth, prefix="")
 parser = reqparse.RequestParser()
 parser.add_argument('username')
 parser.add_argument('password')
+parser.add_argument('sessionToken')
 
 class Authentication():
         def IsAuthenticated(sessionToken):
                 try:
                         result = DBConnection.callproc("IsAuthenticated", (sessionToken, ""))
-                        if(result['count(*)'] == 0):
-                                return false
-                        else:
-                                return true
+                        if(result['userID'] == None) return -1
+                        return result['userID']
                 except SQLAlchemyError:
                         DBConnection.rollback()
 
-                return false
+                return -1
 
 class Logout(Resource):
         def post(self):
                 args = parser.parse_args()
                 try:
                         DBConnection.callproc("Logout", (args['sessionToken'], ""))
-                		DBConnection.commit()
+                	DBConnection.commit()
                 except SQLAlchemyError:
                         DBConnection.rollback()
 
