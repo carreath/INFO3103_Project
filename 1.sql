@@ -196,15 +196,15 @@ CREATE PROCEDURE GetImage(
   END //
 
 CREATE PROCEDURE NewImage(
-  IN username varchar(255),
+  IN profile_id int,
   IN name varchar(255),
   IN size varchar(255),
   IN extension varchar(255),
   IN uri varchar(255)
 )
     BEGIN
-	    INSERT INTO Image (username, name, size, extension, uri)
-		    VALUES (username, name, size, extension, uri);
+	    INSERT INTO Image (profile_id, name, size, extension, uri)
+		    VALUES (profile_id, name, size, extension, uri);
 			SELECT LAST_INSERT_ID();
     End //
 
