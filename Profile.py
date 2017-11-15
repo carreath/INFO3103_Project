@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.6
-from flask import Blueprint
+from flask import Blueprint, request, jsonify, abort, make_response
 from flask_restful import reqparse, Resource, Api
 import math
 import hashlib, uuid
@@ -9,29 +9,37 @@ profile = Blueprint('users', __name__)
 api = Api(profile, prefix="/users")
 
 class Profile(Resource):
-        def get(self, userID):
-                try:
-                        result = DBConnection.callproc("loadProfile", (userID))
+    def get(self, userID):
+        try:
+            result = DBConnection.callproc("GetProfile", (userID))
 
-                        if(result["Count(*)"] == 0):
-                                return {"status": 404}
-                        else:
-                                return {"status": 200}
+            if(result == None):
+                return make_response(jsonify({"status": "Profile Not Found"}), 404)
+            else:
+                return make_response(jsonify({"profile": result}), 200)
 
-                except SQLAlchemyError:
-                        DBConnection.rollback()
+        except:
+            DBConnection.rollback()
 
-                return {"status": 500}
+        return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
-        def update(self):
-                args = parser.parse_args()
-                try:
-                        DBConnection.callproc("updateProfile", args)
-                        DBConnection.commit()
-                except SQLAlchemyError:
-                        DBConnection.rollback()
+    def update(self):
+    	parser = reqparse.RequestParser()
+		parser.add_argument('username')
+		parser.add_argument('display_name')
+        args = parser.parse_args()
+        try:
+        	username = Authentication.IsAuthenticated(args['sessionToken'])
+            if(username == None):
+            	return make_response(jsonify({"status", "You are not Logged In"}), 401)
 
-                return {"status": 200}
+            DBConnection.callproc("updateProfile", (args['username'], args['display_name']))
+            DBConnection.commit()
+        except:
+            DBConnection.rollback()
+            return make_response(jsonify({"status": "Internal Server Error"}), 500)
+
+        return make_response(jsonify({"status": "Profile Updated"}), 200)
 
 # Add all resources to the app
 api.add_resource(Profile, '/Profile')
