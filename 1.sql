@@ -306,21 +306,21 @@ CREATE PROCEDURE CreateTag(
     End //
 
 CREATE PROCEDURE GetTag(
-  IN tag_id int
+  IN description varchar(255)
   )
   BEGIN
-    SELECT description FROM Tag as t
-    WHERE t.tag_id = tag_id;
+    SELECT id FROM Tag as t
+    WHERE t.description = description;
   END //
 
-CREATE PROCEDURE getTags(
+CREATE PROCEDURE GetTags(
   IN post_id int
   )
   BEGIN
-    SELECT post_id, image_id, title, description, dates, likes, dislikes
+    SELECT t.description
 	FROM Tags AS s
 	JOIN Tag AS t
-		ON t.tag_id = s.tag_id
+		ON t.id = s.tag_id
     WHERE post_id = s.post_id;
   END //
 
