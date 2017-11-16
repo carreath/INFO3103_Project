@@ -1,6 +1,6 @@
 #/usr/bin/env python
 APP_HOST = 'info3103.cs.unb.ca'
-APP_PORT = 	14637	# no quotes - it's a number!
+APP_PORT =	 14637	# no quotes - it's a number!
 APP_DEBUG = True
 
 MYSQL_File = "1.sql"

@@ -1,4 +1,3 @@
-
 -------------------------------------------------------------------
 -------------------------------------------------------------------
 -------------------------   DROPS   -------------------------------
@@ -24,15 +23,19 @@ DROP PROCEDURE IF EXISTS DeleteImage;
 DROP PROCEDURE IF EXISTS NewPost;
 DROP PROCEDURE IF EXISTS DeletePost;
 DROP PROCEDURE IF EXISTS GetPost;
+DROP PROCEDURE IF EXISTS UpdatePost;
+DROP PROCEDURE IF EXISTS GetUserPosts;
 DROP PROCEDURE IF EXISTS GetRandomPosts;
 DROP PROCEDURE IF EXISTS GetRecentPosts;
 DROP PROCEDURE IF EXISTS GetPopularPosts;
 DROP PROCEDURE IF EXISTS GetStarredPosts;
+DROP PROCEDURE IF EXISTS GetFollowedPosts;
 DROP PROCEDURE IF EXISTS GetStarsCount;
 DROP PROCEDURE IF EXISTS CreateStars;
 DROP PROCEDURE IF EXISTS CreateTag;
-DROP PROCEDURE IF EXISTS AddTag;
 DROP PROCEDURE IF EXISTS GetTag;
+DROP PROCEDURE IF EXISTS AddTags;
+DROP PROCEDURE IF EXISTS DeleteTags;
 DROP PROCEDURE IF EXISTS GetTags;
 DROP PROCEDURE IF EXISTS GetPosts;
 DROP PROCEDURE IF EXISTS CreateFollow;
@@ -143,7 +146,8 @@ CREATE TABLE Comments (
 
 DELIMITER //
 CREATE PROCEDURE GetProfileID(
-	IN username varchar(255)
+	IN username varchar(255),
+	IN dummy varchar(1)
 )
   BEGIN
     SELECT id FROM Profile AS p
@@ -152,20 +156,23 @@ CREATE PROCEDURE GetProfileID(
 END //
 
 CREATE PROCEDURE GetProfile(
-  IN profile_id int
+  IN profile_id int,
+	IN dummy varchar(1)
 )
   BEGIN
-    SELECT p.DisplayName, p.username, Count(po.id), Count(f.id), Count(c.id), Count(s.id)
+    SELECT p.display_name, p.username, Count(po.id) as posts, Count(f.id) as followers, Count(fo.id) as following, Count(c.id) as comments, Count(s.id) as stars
     	FROM Profile as p 
     	JOIN Post as po
-    		ON po.profile_id = p.profile_id
+    		ON po.profile_id = p.id
     	JOIN Follows as f
-    		ON f.profile_id = p.profile_id
+    		ON f.follower_id = p.id
+    	JOIN Follows as fo
+    		ON fo.following_id = p.id
     	JOIN Comments as c
-    		ON c.profile_id = p.profile_id
+    		ON c.profile_id = p.id
     	JOIN Stars as s
-    		ON s.profile_id = p.profile_id
-    WHERE p.profile_id = profile_id;
+    		ON s.profile_id = p.id
+    WHERE p.id = profile_id;
 END //
 
 CREATE PROCEDURE UpdateProfile(
@@ -180,16 +187,17 @@ END //
 
 CREATE PROCEDURE NewProfile(
   IN username varchar(255),
-  IN display_name varchar(255)
+	IN dummy varchar(1)
 )
     BEGIN
     INSERT INTO Profile (username, display_name)
-    	VALUES (username, display_name);
+    	VALUES (username, username);
 		SELECT LAST_INSERT_ID();
     End //
 
 CREATE PROCEDURE GetImage(
-  IN image_id int
+  IN image_id int,
+	IN dummy varchar(1)
 )
   BEGIN
     SELECT name, uri FROM Image as i
@@ -197,20 +205,21 @@ CREATE PROCEDURE GetImage(
   END //
 
 CREATE PROCEDURE NewImage(
-  IN profile_id int,
+  IN username varchar(255),
   IN name varchar(255),
   IN size varchar(255),
   IN extension varchar(255),
   IN uri varchar(255)
 )
     BEGIN
-	    INSERT INTO Image (profile_id, name, size, extension, uri)
-		    VALUES (profile_id, name, size, extension, uri);
+	    INSERT INTO Image (username, name, size, extension, uri)
+		    VALUES (username, name, size, extension, uri);
 			SELECT LAST_INSERT_ID();
     End //
 
 CREATE PROCEDURE DeleteImage(
-  IN image_id int
+  IN image_id int,
+	IN dummy varchar(1)
 )
   BEGIN
     DELETE FROM Image USING i as Image
@@ -230,7 +239,8 @@ CREATE PROCEDURE NewPost(
     End //
 
 CREATE PROCEDURE DeletePost(
-  IN post_id int
+  IN post_id int,
+	IN dummy varchar(1)
 )
   BEGIN
     DELETE FROM Post USING p as Post
@@ -239,11 +249,32 @@ CREATE PROCEDURE DeletePost(
 
 
 CREATE PROCEDURE GetPost(
-  IN post_id int
+  IN post_id int,
+	IN dummy varchar(1)
   )
   BEGIN
     SELECT * FROM Post as p
     WHERE p.id = post_id;
+  END //
+
+CREATE PROCEDURE UpdatePost(
+  IN post_id int,
+  IN title varchar(255),
+  IN description varchar(255)
+)
+  BEGIN
+	UPDATE Post as p
+	SET p.title = title AND p.description = description
+	WHERE p.post_id = pos_id;
+    END //
+
+CREATE PROCEDURE GetUserPosts(
+	IN profile_id int,
+		IN dummy varchar(1)
+)
+  BEGIN
+    SELECT * FROM Post as p
+    WHERE p.profile_id = profile_id;
   END //
 
 CREATE PROCEDURE GetRandomPosts()
@@ -266,7 +297,8 @@ CREATE PROCEDURE GetPopularPosts()
 
 
 CREATE PROCEDURE GetStarredPosts(
-  IN profile_id int
+  IN profile_id int,
+	IN dummy varchar(1)
 )
   BEGIN
     SELECT post_id, image_id, title, description, dates, likes, dislikes
@@ -276,8 +308,21 @@ CREATE PROCEDURE GetStarredPosts(
     WHERE profile_id = p.profile_id;
   END //
 
+CREATE PROCEDURE GetFollowedPosts(
+  IN profile_id int,
+	IN dummy varchar(1)
+)
+  BEGIN
+    SELECT post_id, image_id, title, description, dates, likes, dislikes
+	FROM Post AS p
+	JOIN Follows AS f
+		ON f.post_id = p.id
+    WHERE profile_id = f.follower_id;
+  END //
+
 CREATE PROCEDURE GetStarsCount(
-  IN profile_id int
+  IN profile_id int,
+	IN dummy varchar(1)
 )
   BEGIN
     SELECT Count(*)
@@ -298,7 +343,8 @@ CREATE PROCEDURE CreateStars(
     End //
 
 CREATE PROCEDURE CreateTag(
-  IN description varchar(255)
+  IN description varchar(255),
+	IN dummy varchar(1)
 )
     BEGIN
 	    INSERT INTO Tag (description)
@@ -307,36 +353,48 @@ CREATE PROCEDURE CreateTag(
     End //
 
 CREATE PROCEDURE GetTag(
-  IN description varchar(255)
+  IN tag_id int,
+	IN dummy varchar(1)
   )
   BEGIN
-    SELECT id FROM Tag as t
-    WHERE t.description = description;
+    SELECT description FROM Tag as t
+    WHERE t.tag_id = tag_id;
   END //
 
-CREATE PROCEDURE GetTags(
-  IN post_id int
-  )
-  BEGIN
-    SELECT t.description
-	FROM Tags AS s
-	JOIN Tag AS t
-		ON t.id = s.tag_id
-    WHERE post_id = s.post_id;
-  END //
-  
-CREATE PROCEDURE AddTag(
+CREATE PROCEDURE AddTags(
   IN post_id int,
   IN tag_id int
   )
   BEGIN
-    INSERT INTO Tags (post_id, tag_id)
-    	VALUES (post_id, tag_id);
+    INSERT INTO Tags (post_id, tag_id) 
+    VALUES (post_id, tag_id);
     SELECT LAST_INSERT_ID;
   END //
 
-CREATE PROCEDURE GetPosts(
+CREATE PROCEDURE DeleteTags(
+  IN post_id int,
   IN tag_id int
+  )
+  BEGIN
+    DELETE FROM Tags USING t as Tags
+    WHERE t.post_id = post_id AND t.tag_id = tag_id;
+  END //
+
+CREATE PROCEDURE getTags(
+  IN post_id int,
+	IN dummy varchar(1)
+  )
+  BEGIN
+    SELECT t.id
+	FROM Tag AS t
+	JOIN Tags AS s
+		ON t.id = s.tag_id
+    WHERE post_id = s.post_id;
+  END //
+
+CREATE PROCEDURE GetPosts(
+  IN tag_id int,
+	IN dummy varchar(1)
   )
   BEGIN
     SELECT post_id, image_id, title, description, dates, likes, dislikes
@@ -366,7 +424,8 @@ CREATE PROCEDURE Unfollow(
   END //
 
 CREATE PROCEDURE GetFollowers(
-  IN follower_id int
+  IN follower_id int,
+	IN dummy varchar(1)
   )
   BEGIN
     SELECT following_id FROM Follows as f
@@ -374,7 +433,8 @@ CREATE PROCEDURE GetFollowers(
   END //
 
 CREATE PROCEDURE GetFollowed(
-  IN following_id int
+  IN following_id int,
+	IN dummy varchar(1)
   )
   BEGIN
     SELECT follower_id FROM Follows as f
@@ -382,7 +442,8 @@ CREATE PROCEDURE GetFollowed(
   END //
 
 CREATE PROCEDURE GetComments(
-  IN post_id int
+  IN post_id int,
+	IN dummy varchar(1)
 )
   BEGIN
     SELECT comment_body FROM Comments as c
@@ -420,7 +481,8 @@ CREATE PROCEDURE NewComment(
     End //
 
 CREATE PROCEDURE DeleteComment(
-  IN comment_id int
+  IN comment_id int,
+	IN dummy varchar(1)
 )
   BEGIN
     DELETE FROM Comments USING c as Comments

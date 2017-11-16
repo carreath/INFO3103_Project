@@ -22,8 +22,11 @@ class Profile(Resource):
 					return make_response(jsonify({"status", "You are not Logged In"}), 401)
 				profile_id = result['profile_id']
 
+
+			print(profile_id)
 			result = DatabaseConnection.callprocONE("GetProfile", (profile_id, ""))
 
+			print("D")
 			if(result == None):
 				return make_response(jsonify({"status": "Profile Not Found"}), 404)
 			else:
