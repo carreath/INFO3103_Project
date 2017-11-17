@@ -18,9 +18,8 @@ class Profile(Resource):
 			profile_id = args['profile_id']
 			if args['profile_id'] == None:
 				result = Authentication.isAuthenticated()
-				print(result)
 				if(result['profile_id'] == None):
-					return make_response(jsonify({"status", "You are not Logged In"}), 401)
+					return make_response(jsonify({"status": "You are not Logged In"}), 401)
 				profile_id = result['profile_id']
 
 			result = DatabaseConnection.callprocONE("GetProfile", (profile_id, ""))
@@ -43,7 +42,7 @@ class Profile(Resource):
 		try:
 			result = Authentication.isAuthenticated()
 			if(result['profile_id'] == None):
-				return make_response(jsonify({"status", "You are not Logged In"}), 401)
+				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 
 			DatabaseConnection.callprocONE("UpdateProfile", (profile_id, args['display_name']))

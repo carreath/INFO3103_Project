@@ -17,3 +17,9 @@ SESSION_COOKIE_DOMAIN = "info3103.cs.unb.ca"
 SECRET_KEY = 'd41d8cd98f00b204e9800998ecf8427e'
 
 LDAP_HOST =  'ldap-student.cs.unb.ca'
+
+APP_HOME = '/var/www/html/creath/'
+
+UPLOAD_FOLDER = 'images'
+STATIC_FOLDER = 'static'
+TEMPLATE_FOLDER = 'templates'

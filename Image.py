@@ -1,21 +1,19 @@
 #!/usr/bin/env python3.6
-from flask import Blueprint, jsonify, abort, request, make_response, url_for
+import os
+from flask import Blueprint, jsonify, abort, request, make_response, url_for, render_template, send_from_directory
 from flask_restful import reqparse, Resource, Api
-import math
-import hashlib, uuid
+from werkzeug.utils import secure_filename
+import settings
+from __init__ import app
 from DBConnection import DatabaseConnection
+from Auth import Authentication
+import uuid
 
-image = Blueprint('img', __name__)
+
+image = Blueprint('image', __name__)
 api = Api(image, prefix="")
 
-UPLOAD_FOLDER = '/path/to/the/uploads'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
-
-parser = reqparse.RequestParser()
-parser.add_argument('sessionToken')
-parser.add_argument('imageName')
-parser.add_argument('imageSize')
-parser.add_argument('imageExtension')
 
 ####################################################################################
 #
@@ -42,66 +40,69 @@ def not_found(error):
 		return make_response(jsonify( { 'status': 'Something Went Wrong' } ), 501)
 
 ####################################################################################
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+def getImage(image_id):
+	try:
+		result = DatabaseConnection.callprocONE("GetImage", (image_id, ""))
+
+		return result['uri']
+	except:
+		return ""
 
 class Image(Resource):
-	def get(self, imageID):
-		try:
-			result = DatabaseConnection.callprocONE("getImage", (imageID))
-			return {"status": 200, result}
-		except SQLAlchemyError:
-			DatabaseConnection.rollback()
-
-		return {"status": 500}
-
 	def post(self):
-		args = parser.parse_args()
+		result = Authentication.isAuthenticated()
+		if(result['profile_id'] == None):
+			return make_response(jsonify({"status": "You are not Logged In"}), 401)
+		profile_id = result['profile_id']
+
 		try:
-			userID = Authentication.isAuthenticated(args['sessionToken'])
-			if(userID == -1):
-				abort(401)
-
-			file = request.files['image']
-			f = os.path.join(UPLOAD_FOLDER, file.filename)
-			file.save(f)
-
-			imageURI = UPLOAD_FOLDER + "/" + file.filename
-
-			DatabaseConnection.callprocONE("postImage", (imageID, userID, args['imageName'], args['imageSize'], args['imageExtension'], imageURI))
-			return make_response(jsonify( {"status": "Image Successfully Uploaded"} ), 200)
-		except SQLAlchemyError:
+			if request.method == 'POST':
+				# check if the post request has the image part
+				if 'image' not in request.files:
+					print('No image part')
+					abort(404)
+				image = request.files['image']
+				# if user does not select image, browser also
+				# submit a empty part without filename
+				if image.filename == '':
+					print('No image part')
+					abort(404)
+				if image and allowed_file(image.filename):
+					filename = secure_filename(image.filename)
+					unique_filename = str(uuid.uuid4()) + "." + filename.rsplit('.', 1)[1]
+					image.save(os.path.join(settings.UPLOAD_FOLDER, unique_filename))
+				DatabaseConnection.callprocONE("NewImage", (profile_id, image.filename,unique_filename))
+				DatabaseConnection.commit()
+				return make_response(jsonify({"status": "Image Uploaded Successfully"}), 201)
+		except:
 			DatabaseConnection.rollback()
-
-		abort(500)
+			abort(500)
 
 	def delete(self):
+		parser = reqparse.RequestParser()
+		parser.add_argument('image_id')
 		args = parser.parse_args()
 		try:
-			userID = Authentication.isAuthenticated(args['sessionToken'])
-			if(userID == -1):
-				return {"status", 401}
+			result = Authentication.isAuthenticated()
+			if(result['profile_id'] == None):
+				return make_response(jsonify({"status": "You are not Logged In"}), 401)
+			profile_id = result['profile_id']
 
-			DatabaseConnection.callprocONE("deleteImage", (imageID, userID))
-			return {"status": 200}
-		except SQLAlchemyError:
+			result = DatabaseConnection.callprocONE("GetImageUsage", (args['image_id'], ""))
+			if(result['numPosts'] == 0):
+				DatabaseConnection.callprocONE("DeleteImage", (args['image_id'], ""))
+				DatabaseConnection.commit()
+				return make_response(jsonify({"status": "Image Delete Successfully"}), 200)
+			else:
+				return make_response(jsonify({"status": "Image is being referenced by a Post"}), 400)
+
+		except:
 			DatabaseConnection.rollback()
-
-		return {"status": 500}
-
-def upload_file():
-	if request.method == 'POST':
-		# check if the post request has the file part
-		if 'file' not in request.files:
-			flash('No file part')
-			return redirect(request.url)
-		file = request.files['file']
-		# if user does not select file, browser also
-		# submit a empty part without filename
-		if file.filename == '':
-			flash('No selected file')
-			return redirect(request.url)
-		if file and allowed_file(file.filename):
-			filename = secure_filename(file.filename)
-			file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+			abort(500)
 
 # Add all resources to the app
 api.add_resource(Image, '/img')

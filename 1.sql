@@ -18,6 +18,7 @@ DROP PROCEDURE IF EXISTS GetProfile;
 DROP PROCEDURE IF EXISTS UpdateProfile;
 DROP PROCEDURE IF EXISTS NewProfile;
 DROP PROCEDURE IF EXISTS GetImage;
+DROP PROCEDURE IF EXISTS GetImageUsage;
 DROP PROCEDURE IF EXISTS NewImage;
 DROP PROCEDURE IF EXISTS DeleteImage;
 DROP PROCEDURE IF EXISTS NewPost;
@@ -68,8 +69,6 @@ CREATE TABLE Image (
    id int NOT NULL AUTO_INCREMENT,
    profile_id int NOT NULL,
    name varchar(255) NOT NULL,
-   size varchar(255) NOT NULL,
-   extension varchar(255) NOT NULL,
    uri varchar(255) NOT NULL,
    PRIMARY KEY (id),
    FOREIGN KEY (profile_id) REFERENCES Profile(id)
@@ -80,10 +79,10 @@ CREATE TABLE Post (
    profile_id int NOT NULL,
    image_id int NOT NULL,
    title varchar(255) NOT NULL,
-   description varchar(255),
+   description varchar(255) NOT NULL,
    dates TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   likes int,
-   dislikes int,
+   likes int default 0,
+   dislikes int default 0,
    PRIMARY KEY (id),
    Foreign KEY (profile_id) REFERENCES Profile(id),
    Foreign KEY (image_id) REFERENCES Image(id)
@@ -224,16 +223,23 @@ CREATE PROCEDURE GetImage(
     WHERE i.id = image_id;
   END //
 
+CREATE PROCEDURE GetImageUsage(
+  IN image_id int,
+	IN dummy varchar(1)
+)
+  BEGIN
+    SELECT Count(*) as numPosts FROM Post as p
+    WHERE p.image_id = image_id;
+  END //
+
 CREATE PROCEDURE NewImage(
-  IN username varchar(255),
+  IN profile_id int,
   IN name varchar(255),
-  IN size varchar(255),
-  IN extension varchar(255),
   IN uri varchar(255)
 )
     BEGIN
-	    INSERT INTO Image (username, name, size, extension, uri)
-		    VALUES (username, name, size, extension, uri);
+	    INSERT INTO Image (profile_id, name, uri)
+		    VALUES (profile_id, name, uri);
 			SELECT LAST_INSERT_ID();
     End //
 
@@ -242,7 +248,7 @@ CREATE PROCEDURE DeleteImage(
 	IN dummy varchar(1)
 )
   BEGIN
-    DELETE FROM Image USING i as Image
+    DELETE i FROM Image as i
     	WHERE i.id = image_id;
   END //
 
@@ -263,7 +269,7 @@ CREATE PROCEDURE DeletePost(
 	IN dummy varchar(1)
 )
   BEGIN
-    DELETE FROM Post USING p as Post
+    DELETE p FROM Post as p
     WHERE p.id = post_id;
   END //
 
@@ -284,7 +290,7 @@ CREATE PROCEDURE UpdatePost(
 )
   BEGIN
 	UPDATE Post as p
-	SET p.title = title AND p.description = description
+	SET p.title = title, p.description = description
 	WHERE p.id = post_id;
     END //
 
@@ -407,7 +413,7 @@ CREATE PROCEDURE DeleteTags(
   IN tag_id int
   )
   BEGIN
-    DELETE FROM Tags USING t as Tags
+    DELETE t FROM Tags as t
     WHERE t.post_id = post_id AND t.id = tag_id;
   END //
 
@@ -450,7 +456,7 @@ CREATE PROCEDURE Unfollow(
   IN follower_id int
 )
   BEGIN
-    DELETE FROM Follows USING f as Follows
+    DELETE f FROM Follows as f
     WHERE f.following_id = following_id AND f.follower_id = follower_id;
   END //
 
@@ -516,9 +522,113 @@ CREATE PROCEDURE DeleteComment(
 	IN dummy varchar(1)
 )
   BEGIN
-    DELETE FROM Comments USING c as Comments
-    WHERE c.comment_id = comment_id;
+    DELETE c FROM Comments as c
+    WHERE c.id = comment_id;
   END //
 
 
 DELIMITER ;
+
+
+
+Insert Into Profile (username, display_name)
+	Values('user1', 'Name 1');
+Insert Into Profile (username, display_name)
+	Values('user2', 'Name 2');
+Insert Into Profile (username, display_name)
+	Values('user3', 'Name 3');
+Insert Into Profile (username, display_name)
+	Values('user4', 'Name 4');
+
+
+
+
+Insert Into Image(profile_id, name, uri)
+	Values(1, 'image 1', 'i dont know yet');
+Insert Into Image(profile_id, name, uri)
+	Values(2, 'image 2', 'i dont know yet');
+Insert Into Image(profile_id, name, uri)
+	Values(3, 'image 3', 'i dont know yet');
+Insert Into Image(profile_id, name, uri)
+	Values(4, 'image 4', 'i dont know yet');
+
+
+
+Insert Into Post(profile_id, image_id, title, description)
+	Values(1, 1, 'post1', 'this is the first post');
+Insert Into Post(profile_id, image_id, title, description)
+	Values(2, 2, 'post2', 'this is the second post');
+Insert Into Post(profile_id, image_id, title, description)
+	Values(3, 3, 'post3', 'this is the third post');
+Insert Into Post(profile_id, image_id, title, description)
+	Values(4, 4, 'post4', 'this is the fourth post');
+
+
+
+Insert Into Stars(post_id, profile_id)
+	Values(1, 2);
+Insert Into Stars(post_id, profile_id)
+	Values(2, 3);
+Insert Into Stars(post_id, profile_id)
+	Values(3, 4);
+Insert Into Stars(post_id, profile_id)
+	Values(4, 1);
+
+Insert Into Tag(description)
+	Values('scary');
+Insert Into Tag(description)
+	Values('funny');
+Insert Into Tag(description)
+	Values('cute');
+
+
+Insert Into Tags(post_id, tag_id)
+	Values(1, 1);
+Insert Into Tags(post_id, tag_id)
+	Values(2, 2);
+Insert Into Tags(post_id, tag_id)
+	Values(2, 3);
+Insert Into Tags(post_id, tag_id)
+	Values(3, 1);
+Insert Into Tags(post_id, tag_id)
+	Values(3, 2);
+Insert Into Tags(post_id, tag_id)
+	Values(3, 3);
+Insert Into Tags(post_id, tag_id)
+	Values(4, 1);
+Insert Into Tags(post_id, tag_id)
+	Values(4, 3);
+
+Insert Into Follows(following_id, follower_id)
+	Values(1, 2);
+Insert Into Follows(following_id, follower_id)
+	Values(1, 3);
+Insert Into Follows(following_id, follower_id)
+	Values(1, 4);
+Insert Into Follows(following_id, follower_id)
+	Values(2, 1);
+Insert Into Follows(following_id, follower_id)
+	Values(3, 2);
+Insert Into Follows(following_id, follower_id)
+	Values(2, 4);
+Insert Into Follows(following_id, follower_id)
+	Values(4, 3);
+Insert Into Follows(following_id, follower_id)
+	Values(4, 1);
+
+
+Insert Into Comments(comment_body, post_id, profile_id)
+	Values('wow', 1, 1);
+Insert Into Comments(comment_body, post_id, profile_id)
+	Values('cool', 1, 2);
+Insert Into Comments(comment_body, post_id, profile_id)
+	Values('awesome', 2, 3);
+Insert Into Comments(comment_body, post_id, profile_id)
+	Values('first', 3, 4);
+Insert Into Comments(comment_body, post_id, profile_id)
+	Values('first', 1, 1);
+Insert Into Comments(comment_body, post_id, profile_id)
+	Values('first', 2, 2);
+
+
+

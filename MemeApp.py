@@ -7,17 +7,17 @@ import settings
 from DBConnection import DatabaseConnection
 from Auth import auth 
 from Profile import profile 
-#from Image import image 
-#from Comment import comment 
+from Image import image 
+from Comment import comment 
 from Post import post 
 
 api = Api(app) 
 
 app.register_blueprint(auth) 
 app.register_blueprint(profile) 
-#app.register_blueprint(image) 
-#app.register_blueprint(comment) 
 app.register_blueprint(post) 
+app.register_blueprint(image) 
+app.register_blueprint(comment) 
 
 class Root(Resource): 
 # get method. What might others be aptly named? (hint: post) 
