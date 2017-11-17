@@ -30,7 +30,7 @@ class Comment(Resource):
 		def post(self):
 				args = parser.parse_args()
 				try:
-						userID = Authentication.IsAuthenticated(args['sessionToken'])
+						userID = Authentication.isAuthenticated(args['sessionToken'])
 						if(userID == -1) return {"status", 401}
 
 						DatabaseConnection.callprocONE("postComment", (userID, args['commentBody'], args['post_id']))
@@ -43,7 +43,7 @@ class Comment(Resource):
 		def update(self):
 				args = parser.parse_args()
 				try:
-						userID = Authentication.IsAuthenticated(args['sessionToken'])
+						userID = Authentication.isAuthenticated(args['sessionToken'])
 						if(userID == -1) return {"status", 401}
 
 						DatabaseConnection.callprocONE("updateComment", (userID, args['commentBody'], args['commentID']))
@@ -56,7 +56,7 @@ class Comment(Resource):
 		def delete(self):
 				args = parser.parse_args()
 				try:
-						userID = Authentication.IsAuthenticated(args['sessionToken'])
+						userID = Authentication.isAuthenticated(args['sessionToken'])
 						if(userID == -1) return {"status", 401}
 
 						DatabaseConnection.callprocONE("deleteComment", (userID, args['commentID']))

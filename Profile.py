@@ -18,6 +18,7 @@ class Profile(Resource):
 			profile_id = args['profile_id']
 			if args['profile_id'] == None:
 				result = Authentication.isAuthenticated()
+				print(result)
 				if(result['profile_id'] == None):
 					return make_response(jsonify({"status", "You are not Logged In"}), 401)
 				profile_id = result['profile_id']
@@ -40,18 +41,18 @@ class Profile(Resource):
 		parser.add_argument('display_name')
 		args = parser.parse_args()
 		try:
-			result = Authentication.IsAuthenticated()
+			result = Authentication.isAuthenticated()
+			if(result['profile_id'] == None):
+				return make_response(jsonify({"status", "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
-			if(profile_id == None):
-				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 
-			DatabaseConnection.callproc("updateProfile", (profile_id, args['display_name']))
-			dbConnection.commit()
+			DatabaseConnection.callprocONE("UpdateProfile", (profile_id, args['display_name']))
+			DatabaseConnection.commit()
 		except:
 			DatabaseConnection.rollback()
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
-		return make_response(jsonify({"status": "Profile Updated"}), 200)
+		return make_response(jsonify({"status": "Profile Updated"}), 202)
 
 # Add all resources to the app
 api.add_resource(Profile, '/profile')

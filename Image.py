@@ -56,7 +56,7 @@ class Image(Resource):
 	def post(self):
 		args = parser.parse_args()
 		try:
-			userID = Authentication.IsAuthenticated(args['sessionToken'])
+			userID = Authentication.isAuthenticated(args['sessionToken'])
 			if(userID == -1):
 				abort(401)
 
@@ -76,7 +76,7 @@ class Image(Resource):
 	def delete(self):
 		args = parser.parse_args()
 		try:
-			userID = Authentication.IsAuthenticated(args['sessionToken'])
+			userID = Authentication.isAuthenticated(args['sessionToken'])
 			if(userID == -1):
 				return {"status", 401}
 

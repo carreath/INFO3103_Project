@@ -33,7 +33,8 @@ DROP PROCEDURE IF EXISTS GetFollowedPosts;
 DROP PROCEDURE IF EXISTS GetStarsCount;
 DROP PROCEDURE IF EXISTS CreateStars;
 DROP PROCEDURE IF EXISTS CreateTag;
-DROP PROCEDURE IF EXISTS GetTag;
+DROP PROCEDURE IF EXISTS GetTagID;
+DROP PROCEDURE IF EXISTS GetTagDescription;
 DROP PROCEDURE IF EXISTS AddTags;
 DROP PROCEDURE IF EXISTS DeleteTags;
 DROP PROCEDURE IF EXISTS GetTags;
@@ -160,29 +161,48 @@ CREATE PROCEDURE GetProfile(
 	IN dummy varchar(1)
 )
   BEGIN
-    SELECT p.display_name, p.username, Count(po.id) as posts, Count(f.id) as followers, Count(fo.id) as following, Count(c.id) as comments, Count(s.id) as stars
-    	FROM Profile as p 
-    	JOIN Post as po
-    		ON po.profile_id = p.id
-    	JOIN Follows as f
-    		ON f.follower_id = p.id
-    	JOIN Follows as fo
-    		ON fo.following_id = p.id
-    	JOIN Comments as c
-    		ON c.profile_id = p.id
-    	JOIN Stars as s
-    		ON s.profile_id = p.id
-    WHERE p.id = profile_id;
+    Select p.display_name, p.username, COALESCE(po.posts,0) posts, COALESCE(f.followers,0) followers, COALESCE(fo.following,0) following, COALESCE(c.comments,0) comments, COALESCE(s.stars,0) stars from Profile as p 
+    LEFT JOIN (
+        Select po.profile_id, Count(*) as posts from Post as po 
+        where po.profile_id = profile_id 
+        group by po.profile_id
+    ) as po 
+    on po.profile_id = p.id
+    LEFT JOIN (
+        Select f.follower_id, Count(*) as followers from Follows as f 
+        where f.follower_id = profile_id 
+        group by f.follower_id
+    ) as f
+    on f.follower_id = p.id
+    LEFT JOIN (
+        Select fo.following_id, Count(*) as following from Follows as fo 
+        where fo.following_id = profile_id 
+        group by fo.following_id
+    ) as fo
+    on fo.following_id = p.id
+    LEFT JOIN (
+        Select c.profile_id, Count(*) as comments from Comments as c 
+        where c.profile_id = profile_id 
+        group by c.profile_id
+    ) as c
+    on c.profile_id = p.id
+    LEFT JOIN (
+        Select s.profile_id, Count(*) as stars from Stars as s
+        where s.profile_id = profile_id 
+        group by s.profile_id
+    ) as s
+    on s.profile_id = p.id
+    where p.id = profile_id; 
 END //
 
 CREATE PROCEDURE UpdateProfile(
-  IN username varchar(255),
+  IN profile_id varchar(255),
   IN display_name varchar(255)
 )
   BEGIN
 	UPDATE Profile as p
 	SET p.display_name = display_name
-	WHERE p.username = username;
+	WHERE p.id = profile_id;
 END //
 
 CREATE PROCEDURE NewProfile(
@@ -227,14 +247,14 @@ CREATE PROCEDURE DeleteImage(
   END //
 
 CREATE PROCEDURE NewPost(
-  IN username int,
+  IN profile_id int,
   IN image_id int,
   IN title varchar(255),
   IN description varchar(255)
 )
     BEGIN
-	    INSERT INTO Post (username, image_id, title, description)
-		    VALUES (username, image_id, title, description, 0, 0);
+	    INSERT INTO Post (profile_id, image_id, title, description)
+		    VALUES (profile_id, image_id, title, description);
 			SELECT LAST_INSERT_ID();
     End //
 
@@ -265,7 +285,7 @@ CREATE PROCEDURE UpdatePost(
   BEGIN
 	UPDATE Post as p
 	SET p.title = title AND p.description = description
-	WHERE p.post_id = pos_id;
+	WHERE p.id = post_id;
     END //
 
 CREATE PROCEDURE GetUserPosts(
@@ -301,11 +321,12 @@ CREATE PROCEDURE GetStarredPosts(
 	IN dummy varchar(1)
 )
   BEGIN
-    SELECT post_id, image_id, title, description, dates, likes, dislikes
+    SELECT p.id, image_id, title, description, dates, likes, dislikes
 	FROM Stars AS s
-	JOIN Post AS p
-		ON s.post_id = p.id
-    WHERE profile_id = p.profile_id;
+	LEFT JOIN Post AS p
+		ON s.profile_id = profile_id
+    WHERE profile_id = p.profile_id
+    Order By p.dates;
   END //
 
 CREATE PROCEDURE GetFollowedPosts(
@@ -313,11 +334,12 @@ CREATE PROCEDURE GetFollowedPosts(
 	IN dummy varchar(1)
 )
   BEGIN
-    SELECT post_id, image_id, title, description, dates, likes, dislikes
+    SELECT p.id, image_id, title, description, dates, likes, dislikes
 	FROM Post AS p
-	JOIN Follows AS f
-		ON f.post_id = p.id
-    WHERE profile_id = f.follower_id;
+	LEFT JOIN Follows AS f
+		ON f.follower_id = profile_id
+    WHERE profile_id = f.follower_id
+    Order By p.dates;
   END //
 
 CREATE PROCEDURE GetStarsCount(
@@ -327,7 +349,7 @@ CREATE PROCEDURE GetStarsCount(
   BEGIN
     SELECT Count(*)
 		FROM Stars AS s
-		JOIN Post AS p
+		LEFT JOIN Post AS p
 			ON s.post_id = p.id
     	WHERE profile_id = p.profile_id;
   END //
@@ -352,13 +374,22 @@ CREATE PROCEDURE CreateTag(
 		SELECT LAST_INSERT_ID();
     End //
 
-CREATE PROCEDURE GetTag(
+CREATE PROCEDURE GetTagDescription(
   IN tag_id int,
 	IN dummy varchar(1)
   )
   BEGIN
     SELECT description FROM Tag as t
-    WHERE t.tag_id = tag_id;
+    WHERE t.id = tag_id;
+  END //
+
+CREATE PROCEDURE GetTagID(
+  IN description varchar(255),
+	IN dummy varchar(1)
+  )
+  BEGIN
+    SELECT t.id FROM Tag as t
+    WHERE t.description = description;
   END //
 
 CREATE PROCEDURE AddTags(
@@ -368,7 +399,7 @@ CREATE PROCEDURE AddTags(
   BEGIN
     INSERT INTO Tags (post_id, tag_id) 
     VALUES (post_id, tag_id);
-    SELECT LAST_INSERT_ID;
+    SELECT LAST_INSERT_ID();
   END //
 
 CREATE PROCEDURE DeleteTags(
@@ -377,7 +408,7 @@ CREATE PROCEDURE DeleteTags(
   )
   BEGIN
     DELETE FROM Tags USING t as Tags
-    WHERE t.post_id = post_id AND t.tag_id = tag_id;
+    WHERE t.post_id = post_id AND t.id = tag_id;
   END //
 
 CREATE PROCEDURE getTags(
@@ -387,7 +418,7 @@ CREATE PROCEDURE getTags(
   BEGIN
     SELECT t.id
 	FROM Tag AS t
-	JOIN Tags AS s
+	LEFT JOIN Tags AS s
 		ON t.id = s.tag_id
     WHERE post_id = s.post_id;
   END //
@@ -399,7 +430,7 @@ CREATE PROCEDURE GetPosts(
   BEGIN
     SELECT post_id, image_id, title, description, dates, likes, dislikes
 	FROM Tags AS t
-	JOIN Post AS p
+	LEFT JOIN Post AS p
 		ON s.post_id = p.post_id
     WHERE tag_id = t.tag_id;
   END //
@@ -470,13 +501,13 @@ CREATE PROCEDURE UpdateComment(
     END //
 
 CREATE PROCEDURE NewComment(
-  IN user_id int,
+  IN profile_id int,
   IN post_id int,
   IN comment_body varchar(255)
 )
     BEGIN
-    INSERT INTO Comments (user_id, post_id, comment_body)
-	    VALUES (user_id, post_id, comment_body);
+    INSERT INTO Comments (profile_id, post_id, comment_body)
+	    VALUES (profile_id, post_id, comment_body);
 		SELECT LAST_INSERT_ID();
     End //
 
