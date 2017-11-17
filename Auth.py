@@ -1,18 +1,20 @@
 #!/usr/bin/env python3.6
-import sys
 from flask import Blueprint, request, jsonify, abort, make_response, session
 from flask_restful import reqparse, Resource, Api
-from flask_session import Session
-import json
-from ldap3 import Server, Connection, ALL
 from DBConnection import DatabaseConnection
-import settings
+from ldap3 import Server, Connection, ALL
+from flask_session import Session
 from __init__ import app
 import ErrorHandlers
+import settings
+import json
+import sys
 
+# Initialize this python file as a flask blueprint and define api
 auth = Blueprint('auth', __name__)
 api = Api(auth, prefix="")
 
+# Define the LDap security variables
 app.secret_key = settings.SECRET_KEY
 app.config['SESSION_TYPE'] = settings.SESSION_TYPE
 app.config['SESSION_COOKIE_NAME'] = settings.SESSION_COOKIE_NAME
@@ -24,21 +26,46 @@ Session(app)
 def not_found(error):
 	return make_response(jsonify( { 'status': 'Unauthorised' } ), 401)
 
+# Define an  Authentication helper class
+# Called with Authentication.isAuthenticated()
+# Returns
+#     AUTHENTICATED
+#     {
+#	      'profile_id': 'authenticated user profile_id',
+#		  'username': 'authenticated user username'
+#     }
+#
+#     NOT AUTHENTICATED
+#     None
+#
 class Authentication():
 	def isAuthenticated():
 		if 'username' in session:
+			#Hit DB get the profile_id
 			result = DatabaseConnection.callprocONE('GetProfileID', (session['username'], ""))
+
+			#if the DB doesnt have one set it to ""
 			if(result == None):
 				result = ""
 			else:
 				result = result['id']
+
+			#return object for use in the calling function
 			return {"profile_id": result, "username": session['username']}
 		else:
+			#Not authenticated returns None
 			return None
 
+	#Simply grab current username
 	def getUserName():
 		return session['username']
 
+# Login class, handles the signin Post request
+#
+# parameters: 
+#     username: Your computer username
+#     password: Your computer password
+#
 class Login(Resource):
 	def post(self):
 		if not request.json:
@@ -91,8 +118,12 @@ class Login(Resource):
 			DatabaseConnection.rollback()
 		return make_response(jsonify(response), responseCode)
 
+
+# Class Logout handles the logout request
+# No parameters
 class Logout(Resource):
 	def delete(self):
+		#if username is in the session delete it
 		if 'username' in session:
 			del session['username']
 			response = {'status': 'success'}
@@ -101,6 +132,7 @@ class Logout(Resource):
 			response = {'status': 'fail'}
 			responseCode = 403
 
+		# return the response if logour was successful
 		return make_response(jsonify(response), responseCode)
 
 
