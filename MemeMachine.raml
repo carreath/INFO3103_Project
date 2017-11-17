@@ -7,6 +7,7 @@ securitySchemes:
     description: |
       This API supports Basic Authentication.
     type: Basic Authentication
+
 types:
   Profile:
     type: object
@@ -80,7 +81,10 @@ types:
         body:
           application/json:
             description: redirects you to your profile
-
+      400:
+        body:
+          application/json:
+            description: Bad Request
       500:
         body:
           application/json:
@@ -93,6 +97,14 @@ types:
         body:
           application/json:
             description: successfully logged out
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      403:
+        body:
+          application/json:
+            description: Failed to log out
       500:
         body:
           application/json:
@@ -108,6 +120,18 @@ types:
           application/json:
             type: Profile
             description: Get a users profile
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
+      404:
+        body:
+          application/json:
+            description: Profile Not Found
       500:
         body:
           application/json:
@@ -118,14 +142,50 @@ types:
       profile_id: integer
       display_name: string
     responses:
-      200:
+      302:
         body:
           application/json:
-            description: Successfully updated profile
+            description: Successfully updated profile redirect back to profile
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
             description: Internal Server Error
+  /comments:
+    get:
+      queryParameters:
+        profile_id: integer
+      responses:
+        200:
+          body:
+            application/json:
+              type: Comments[]
+              description: list of your comments
+        400:
+          body:
+            application/json:
+              description: Bad Request
+        401:
+          body:
+            application/json:
+              description: You are not logged in
+        404:
+          body:
+            application/json:
+              description: Profile Does Not Exist
+        500:
+          body:
+            application/json:
+              description: Internal Server Error
+
+
   /posts:
     get:
       responses:
@@ -134,6 +194,18 @@ types:
             application/json:
               type: Post[]
               description: list of users posts
+        400:
+          body:
+            application/json:
+              description: Bad Request
+        401:
+          body:
+            application/json:
+              description: You are not logged in
+        404:
+          body:
+            application/json:
+              description: Posts Do Not Exist
         500:
           body:
             application/json:
@@ -147,7 +219,16 @@ types:
       200:
         body:
           application/json:
+            type: Post
             description: Get a specific post
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      404:
+        body:
+          application/json:
+            description: Post Does Not Exist
       500:
         body:
           application/json:
@@ -159,10 +240,18 @@ types:
       title: string
       description: string
     responses:
-      200:
+      302:
         body:
           application/json:
-            description: updates a post
+            description: updates a post redirect back to post
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -174,10 +263,18 @@ types:
       title: string
       description: string
     responses:
-      200:
+      302:
         body:
           application/json:
-            description: creates a post
+            description: creates a post redirect back to post
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -186,10 +283,18 @@ types:
     queryParameters:
       post_id: integer
     responses:
-      200:
+      201:
         body:
           application/json:
             description: Deletes a post from access and removes the link to the source image
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -203,6 +308,18 @@ types:
             application/json:
               type: Post[]
               description: get a list of most recent posts from followed users
+        400:
+          body:
+            application/json:
+              description: Bad Request
+        401:
+          body:
+            application/json:
+              description: You are not logged in
+        404:
+          body:
+            application/json:
+              description: Posts Do Not Exist
         500:
           body:
             application/json:
@@ -216,6 +333,14 @@ types:
             application/json:
               type: Post[]
               description: get list of most liked posts
+        400:
+          body:
+            application/json:
+              description: Bad Request
+        404:
+          body:
+            application/json:
+              description: Posts Do Not Exist
         500:
           body:
             application/json:
@@ -229,6 +354,18 @@ types:
             application/json:
               type: Post[]
               description: get list of your starred posts
+        400:
+          body:
+            application/json:
+              description: Bad Request
+        401:
+          body:
+            application/json:
+              description: You are not logged in
+        404:
+          body:
+            application/json:
+              description: Posts Do Not Exist
         500:
           body:
             application/json:
@@ -242,6 +379,14 @@ types:
             application/json:
               type: Post[]
               description: get list of most recent posts
+        400:
+          body:
+            application/json:
+              description: Bad Request
+        404:
+          body:
+            application/json:
+              description: Posts Do Not Exist
         500:
           body:
             application/json:
@@ -254,6 +399,14 @@ types:
             application/json:
               type: Post[]
               description: get list of random posts
+        400:
+          body:
+            application/json:
+              description: Bad Request
+        404:
+          body:
+            application/json:
+              description: Posts Do Not Exist
         500:
           body:
             application/json:
@@ -267,10 +420,22 @@ types:
       extention: string
       URI: string
     responses:
-      200:
+      201:
         body:
           application/json:
-            description: creates an image
+            description: Image Uploaded Successfully
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
+      404:
+        body:
+          application/json:
+            description: Missing Image
       500:
         body:
           application/json:
@@ -283,6 +448,14 @@ types:
         body:
           application/json:
             description: Deletes an image from the file system ONLY if it is not currently in use
+      400:
+        body:
+          application/json:
+            description: Image is being referenced by a Post
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -293,10 +466,18 @@ types:
     queryParameters:
       post_id: integer
     responses:
-      200:
+      201:
         body:
           application/json:
             description: creates a link between current user and a post
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -309,6 +490,14 @@ types:
         body:
           application/json:
             description: Deletes the link between current user and a post
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -323,6 +512,14 @@ types:
         body:
           application/json:
             description: Creates a following link between current user and another user
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -335,6 +532,14 @@ types:
         body:
           application/json:
             description: Deletes the link between current user and another user
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -351,6 +556,10 @@ types:
           application/json:
             type: Comments[]
             description: Returns list of comments connected to a post or a specific user
+      400:
+        body:
+          application/json:
+            description: Bad Request
       500:
         body:
           application/json:
@@ -364,6 +573,14 @@ types:
         body:
           application/json:
             description: Update a comment connected to the current authenticated user
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -374,10 +591,18 @@ types:
       comment_body: string
       post_id: integer
     responses:
-      200:
+      201:
         body:
           application/json:
             description: Creates and links a comment to a post authored by currently authenticated user
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
@@ -391,6 +616,14 @@ types:
         body:
           application/json:
             description: delete a post connected to the current authenticated user
+      400:
+        body:
+          application/json:
+            description: Bad Request
+      401:
+        body:
+          application/json:
+            description: You are not logged in
       500:
         body:
           application/json:
