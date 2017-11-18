@@ -7,6 +7,7 @@ import settings
 import Image
 from __init__ import app
 
+# Initialize this python file as a flask blueprint and define api
 post = Blueprint('post', __name__)
 api = Api(post, prefix="")
 

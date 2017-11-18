@@ -10,6 +10,7 @@ from Auth import Authentication
 import uuid
 
 
+# Initialize this python file as a flask blueprint and define api
 image = Blueprint('image', __name__)
 api = Api(image, prefix="")
 

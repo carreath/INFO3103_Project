@@ -5,6 +5,7 @@ from DBConnection import DatabaseConnection
 from Auth import Authentication
 from __init__ import app
 
+# Initialize this python file as a flask blueprint and define api
 follow = Blueprint('follow', __name__)
 api = Api(follow, prefix="")
 

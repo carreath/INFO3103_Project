@@ -6,6 +6,7 @@ import hashlib, uuid
 from DBConnection import DatabaseConnection
 from Auth import Authentication
 
+# Initialize this python file as a flask blueprint and define api
 profile = Blueprint('profile', __name__)
 api = Api(profile, prefix="")
 

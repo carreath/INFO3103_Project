@@ -7,6 +7,7 @@ from DBConnection import DatabaseConnection
 from __init__ import app
 from Auth import Authentication
 
+# Initialize this python file as a flask blueprint and define api
 comment = Blueprint('comment', __name__)
 api = Api(comment, prefix="")
 
