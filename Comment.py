@@ -17,7 +17,7 @@ def GetCommentsByProfile():
 	parser = reqparse.RequestParser()
 	parser.add_argument('profile_id')
 	args = parser.parse_args()
-	
+
 	profile_id = args['profile_id']
 	try:
 		#If profile_id is not given we take the current users id
@@ -36,17 +36,29 @@ def GetCommentsByProfile():
 # Class Comments handles all requests to do
 # with comments on posts
 class Comments(Resource):
+	# /comments GET
+	#	return the comments on the post with matching post_id
+	#
+	# 	parameters:
+	#		post_id
+	#
 	def get(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('post_id')
 		args = parser.parse_args()
-		
+
 		try:
 			results = DatabaseConnection.callprocALL("GetComments", (args['post_id'], ""))
 			return make_response(jsonify({"comments":results}), 200)
 		except:
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
-
+	# /comments POST
+	#	Creates the Comment on a Post with a given post_id and sets the
+	#		Comments body = comment_body
+	#
+	# 	parameters:
+	#		post_id, comment_body
+	#
 	def post(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('post_id')
@@ -64,7 +76,13 @@ class Comments(Resource):
 		except:
 			DatabaseConnection.rollback()
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
-
+	# /comments PUT
+	#	Updates the Comment on a Post with a given post_id and changes the
+	#		Comments body to comment_body
+	#
+	# 	parameters:
+	#		post_id, comment_body
+	#
 	def put(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('comment_id')
@@ -82,6 +100,12 @@ class Comments(Resource):
 			DatabaseConnection.rollback()
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
+	# /comments Delete
+	#	Delets the Comment with a given comment_id
+	#
+	# 	parameters:
+	#		comment_id
+	#
 	def delete(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('comment_id')
