@@ -37,6 +37,7 @@ def GetFollowing():
 		return make_response(jsonify({"followed":results}), 200)
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
+		
 # /profile/following GET
 #	If you pass in a profile_id this will return the users that the user
 #   with the specified profile_id is following

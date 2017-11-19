@@ -74,6 +74,7 @@ class Comments(Resource):
 			profile_id = result['profile_id']
 
 			DatabaseConnection.callprocONE("NewComment", (profile_id, args['post_id'], args['comment_body']))
+			DatabaseConnection.commit()
 			return make_response(jsonify({"status": "Comment has been posted"}), 201)
 		except:
 			DatabaseConnection.rollback()
@@ -98,6 +99,7 @@ class Comments(Resource):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 
 			DatabaseConnection.callprocONE("UpdateComment", (args['comment_id'], args['comment_body']))
+			DatabaseConnection.commit()
 			return make_response(jsonify({"status": "Comment has been updated"}), 200)
 		except:
 			DatabaseConnection.rollback()
@@ -122,6 +124,7 @@ class Comments(Resource):
 			profile_id = result['profile_id']
 
 			DatabaseConnection.callprocONE("DeleteComment", (args['comment_id'], ""))
+			DatabaseConnection.commit()
 			return make_response(jsonify({"status": "Comment has been deleted"}), 200)
 		except:
 			DatabaseConnection.rollback()

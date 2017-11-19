@@ -50,8 +50,15 @@ def GetPopularPosts():
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
+# /profile GET
+#	Gets all the posts from a specific user or the current authenticated user
+#
+# 	parameters:
+#		profile_id (optional):
+#			Returns a list of 
+#
 @app.route("/post/following")
-def GetFollowerPosts():	   
+def GetFollowedPosts():	   
 	try:
 		result = Authentication.isAuthenticated()
 		profile_id = result['profile_id']
@@ -66,6 +73,13 @@ def GetFollowerPosts():
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
+# /profile GET
+#	Gets all the posts from a specific user or the current authenticated user
+#
+# 	parameters:
+#		profile_id (optional):
+#			Selects a list of posts connected to this profile otherwise return current authenticated users posts
+#
 @app.route("/profile/posts")
 def GetUserPosts():	 
 	try:
@@ -140,11 +154,14 @@ class Post(Resource):
 		parser.add_argument('tags', action='append')
 		args = parser.parse_args()
 		try:
+			print("A")
 			#Check Authenticated
 			result = Authentication.isAuthenticated()
 			if(result == None):
 				abort(401, "Unauthorised")
 
+			profile_id = result['profile_id']
+		
 			# Check if all required args are present
 			if args['image_id'] == None or args['title'] == None or args['description'] == None:
 				return make_response(jsonify({"status": "Bad Request"}), 400)
@@ -192,6 +209,7 @@ class Post(Resource):
 					# So it skips that tag and continues
 					tag_id = -1
 
+			print("B")
 			# When the post is fully built redirect the user to their new post
 			return redirect(settings.APP_HOST + ":" + str(settings.APP_PORT) + "/post?post_id=" + str(post_id), code=302)
 		except:
@@ -250,20 +268,28 @@ class Post(Resource):
 			for tag in args['tags']:
 				try:
 					tag_id = -1
+					# Get tag if it exists
 					result = DatabaseConnection.callprocONE("GetTagID", (tag, ""))
 					if(result == None):
+						# Tag doesnt exist create it
 						result = DatabaseConnection.callprocONE("CreateTag", (tag, ""))
 						tag_id = result['LAST_INSERT_ID()']
 					else:
+						# tag exists set tag_id 
 						tag_id = result['id']
+					# If tag_id is not currently on the post add it
 					if tag_id not in currentTags:
 						DatabaseConnection.callprocONE("AddTags", (args['post_id'], tag_id))
+
+					# Append all tags to the new tags array (it is the new list on the DB)
 					newTags.append(tag_id)
 				except:
 					tag_id = -1
 
+			# Loop through the old current tags on the post
 			for tag_id in currentTags:
 				try:	
+					# If the current tag from the before update post does not exist in new tags remove it from the post
 					if tag_id not in newTags:
 						DatabaseConnection.callprocONE("DeleteTags", (args['post_id'], tag_id))
 
