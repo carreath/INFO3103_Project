@@ -24,6 +24,12 @@ def getImage(image_id):
 	return result['uri']
 
 class Image(Resource):
+	# /img GET
+	#	returns an image uri based on a specified image_id
+	#
+	# 	parameters:
+	#		image_id
+	#
 	def get(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('image_id')
@@ -32,7 +38,12 @@ class Image(Resource):
 			return make_response(jsonify({"imageURI": getImage(args['image_id'])}), 200)
 		except:
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
-
+	# /img POST
+	#	uploads an image to filesystem
+	#
+	# 	parameters:
+	#		Image File through multipart form data
+	#
 	def post(self):
 		result = Authentication.isAuthenticated()
 		if(result == None):
@@ -61,7 +72,12 @@ class Image(Resource):
 		except:
 			DatabaseConnection.rollback()
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
-
+	# /img DELETE
+	#	Deletes an image based on a specified image_id
+	#
+	# 	parameters:
+	#		image_id
+	#
 	def delete(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('image_id')

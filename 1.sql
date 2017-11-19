@@ -521,12 +521,12 @@ CREATE PROCEDURE GetComments(
   END //
 
 CREATE PROCEDURE GetCommentsByUser(
-  IN post_id int,
-  IN user_id int
+  IN profile_id int,
+	IN dummy varchar(1)
 )
   BEGIN
-    SELECT comment_body FROM Comments as c
-    WHERE c.profile_id = user_id;
+    SELECT * FROM Comments as c
+    WHERE c.profile_id = profile_id;
   END //
 
 CREATE PROCEDURE UpdateComment(
