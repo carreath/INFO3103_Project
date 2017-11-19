@@ -25,9 +25,7 @@ app.register_blueprint(comment)
 app.register_blueprint(follow) 
 app.register_blueprint(star) 
 
-
-app.config['TRAP_HTTP_EXCEPTIONS']=True
-
+# Redirect user from / to /post to avoid issues
 class Root(Resource): 
 	def get(self): 
 		return redirect(settings.APP_HOST + ":" + str(settings.APP_PORT) + "/post/recent", code=302)

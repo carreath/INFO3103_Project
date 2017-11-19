@@ -62,7 +62,7 @@ class Profile(Resource):
 		parser.add_argument('display_name')
 		args = parser.parse_args()
 		try:
-			# Check Authentication
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
 			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)

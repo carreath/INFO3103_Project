@@ -67,8 +67,9 @@ class Image(Resource):
 		parser.add_argument('image_id')
 		args = parser.parse_args()
 		try:
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
-			if(result['profile_id'] == None):
+			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 

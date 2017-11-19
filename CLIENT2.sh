@@ -416,10 +416,10 @@ ImageTests () {
 	Logout
 }
 
-#AuthenticationTest
-#ProfileTests
+AuthenticationTest
+ProfileTests
 PostTests
-#CommentTests
-#FollowerTests
-#StarTests
-#ImageTests
+CommentTests
+FollowerTests
+StarTests
+ImageTests

@@ -17,6 +17,7 @@ def getStarredPosts():
 		if(profile_id == None):
 			return {"result": {"status", "You are not Logged In"}, "code":402}
 
+		# Gets a list of starred posts
 		result = DatabaseConnection.callprocALL("GetStarredPosts", (profile_id, ""))
 
 		if(result == None):
@@ -34,18 +35,27 @@ def GetStarredPosts():
 
 # Creates a star or deletes it 
 class Star(Resource):
+	# /star POST
+	#	return a profile mayching the profile_id given or authenticated
+	#
+	# 	parameters:
+	#		profile_id (optional):
+	#			If not defined use currently authenticated users id
+	#			otherwise return given profile_id's profile
+	#
 	def post(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('post_id')
 		args = parser.parse_args()
 
 		try:
-			# Check if Authenticated
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
 			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 
+			# Create star link
 			DatabaseConnection.callprocONE("CreateStar", (args['post_id'], profile_id))
 			DatabaseConnection.commit()
 			return make_response(jsonify({"status": "Successfully starred a post"}), 201)
@@ -53,16 +63,25 @@ class Star(Resource):
 			DatabaseConnection.rollback()
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
+	# /star DELETE
+	#	Removes a star link
+	#
+	# 	parameters:
+	#		post_id:
+	#			Deletes the star on one post
+	#
 	def delete(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('post_id')
 		args = parser.parse_args()
 
 		try:
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
-			if(result['profile_id'] == None):
+			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
+
 
 			DatabaseConnection.callprocONE("DeleteStar", (args['post_id'], profile_id))
 			DatabaseConnection.commit()

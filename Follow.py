@@ -19,8 +19,9 @@ def GetFollowing():
 	profile_id = args['profile_id']
 	try:
 		if(profile_id == None):
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
-			if(result['profile_id'] == None):
+			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 
@@ -38,8 +39,9 @@ def GetFollowers():
 	profile_id = args['profile_id']
 	try:
 		if(profile_id == None):
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
-			if(result['profile_id'] == None):
+			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 
@@ -55,6 +57,7 @@ class Follow(Resource):
 		args = parser.parse_args()
 
 		try:
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
 			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
@@ -74,8 +77,9 @@ class UnFollow(Resource):
 		args = parser.parse_args()
 
 		try:
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
-			if(result['profile_id'] == None):
+			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 

@@ -22,6 +22,7 @@ def GetCommentsByProfile():
 	try:
 		#If profile_id is not given we take the current users id
 		if(profile_id == None):
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
 			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
@@ -54,6 +55,7 @@ class Comments(Resource):
 		args = parser.parse_args()
 
 		try:
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
 			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
@@ -72,8 +74,9 @@ class Comments(Resource):
 		args = parser.parse_args()
 
 		try:
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
-			if(result['profile_id'] == None):
+			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 
 			DatabaseConnection.callprocONE("UpdateComment", (args['comment_id'], args['comment_body']))
@@ -88,8 +91,9 @@ class Comments(Resource):
 		args = parser.parse_args()
 
 		try:
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
-			if(result['profile_id'] == None):
+			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 

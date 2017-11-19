@@ -83,6 +83,16 @@ def GetUserPosts():
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 class Post(Resource):
+	# /profile GET
+	#	Gets either one post with post_id
+	#   or a list of posts by a user
+	#
+	# 	parameters:
+	#		post_id (optional):
+	#			Selects a single post connected to this id
+	#		profile_id (optional):
+	#			Selects a list of posts connected to this profile
+	#
 	def get(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('post_id')
@@ -106,6 +116,19 @@ class Post(Resource):
 		except:
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
+	# /profile POST
+	#	Creates a new post connected to the current user, image, tags, stars
+	#
+	# 	parameters:
+	#		image_id:
+	#			Image for this post
+	#		title:
+	#			title of this post
+	#		description:
+	#			description for this post
+	#		tags:
+	#			tag array on this post
+	#
 	def post(self):
 		if not request.json:
 			return make_response(jsonify({"status": "Bad Request"}), 400) # bad request
@@ -117,42 +140,77 @@ class Post(Resource):
 		parser.add_argument('tags', action='append')
 		args = parser.parse_args()
 		try:
+			#Check Authenticated
 			result = Authentication.isAuthenticated()
-			profile_id = result['profile_id']
-			if(profile_id == None):
+			if(result == None):
 				abort(401, "Unauthorised")
 
+			# Check if all required args are present
 			if args['image_id'] == None or args['title'] == None or args['description'] == None:
 				return make_response(jsonify({"status": "Bad Request"}), 400)
 
+			# Create the post
 			result = DatabaseConnection.callprocONE("NewPost", (profile_id, args['image_id'], args['title'], args['description']))
 
+			# Get the new post ID. If it is None there was an error
 			if result['LAST_INSERT_ID()'] == None:
 				return make_response(jsonify({"status": "Bad Request"}), 400)
 
+			# Commit the changes to the DB
 			DatabaseConnection.commit()
 
+			# Organize and Init the tags
 			post_id = result['LAST_INSERT_ID()']
+
+			# For each tag which was passed in:
+			#	Check if it exists:
+			#		if not create
+			#	Add the tag ID to the post
 			for tag in args['tags']:
 				try:
+					# Get tag if it exists in the DB already
 					result = DatabaseConnection.callprocONE("GetTagID", (tag, ""))
+
+					# if result is None then the tag is not yet present
 					if(result == None):
+						#create tag
 						result = DatabaseConnection.callprocONE("CreateTag", (tag, ""))
+
+						#get that tags new id
 						if result['LAST_INSERT_ID()'] == None:
 							return make_response(jsonify({"status": "Bad Request"}), 400)
 						tag_id = result['LAST_INSERT_ID()']
 					else:
 						tag_id = result['id']
 
+					# tag_id is now the tag to be added to the post
+					# add the tag to the post
 					DatabaseConnection.callprocONE("AddTags", (post_id, tag_id))
 					DatabaseConnection.commit()
 				except:
+					# If we end up here we encountered a problem with one of the tags
+					# So it skips that tag and continues
 					tag_id = -1
+
+			# When the post is fully built redirect the user to their new post
 			return redirect(settings.APP_HOST + ":" + str(settings.APP_PORT) + "/post?post_id=" + str(post_id), code=302)
 		except:
+			# There was an issue if we got here...
 			DatabaseConnection.rollback()
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
+	# /profile PUT
+	#	Updates a Post with new title, description, or tags
+	#	IMAGES ARE IMMUTABLE ONCE ATTACHED CANNOT BE CHANGED
+	#
+	# 	parameters:
+	#		title:
+	#			title of this post
+	#		description:
+	#			description for this post
+	#		tags:
+	#			tag array on this post
+	#
 	def put(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('post_id')
@@ -161,22 +219,32 @@ class Post(Resource):
 		parser.add_argument('tags', action='append')
 		args = parser.parse_args()
 		try:
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
 			if(result == None):
 				abort(401, "Unauthorised")
 
+			# Update the post
 			DatabaseConnection.callprocONE("UpdatePost", (args['post_id'], args['title'], args['description']))
 			DatabaseConnection.commit()
 		except:
 			DatabaseConnection.rollback()
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
+		# Update the tags
+		# First Get a list of the current tags on the post
+		# Then get a list of the new tags being put on the post
+		# then determine the tags that are new and deleted from the post
+		# Then loop through the new tags create tags that dont exist and attach to DB
+		# Then loop through deleted tags and remove them from the post
 		try:
+			# Get all tags from the current post
 			result = DatabaseConnection.callprocALL("GetTags", (args['post_id'], ""))
 			currentTags = []
 			for tag in result:
 				currentTags.append(tag['id'])
 
+			# Get the new and removed tags from the args list
 			newTags = []
 			removedTags = []
 			for tag in args['tags']:
@@ -207,18 +275,27 @@ class Post(Resource):
 		except:
 			DatabaseConnection.rollback()
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
-
+	
+	# /profile DELETE
+	#	Updates the profile of the current user with a given display_name
+	#
+	# 	parameters:
+	#		display_name:
+	#			Updated display name to hide username (if you want that)
+	#
 	def delete(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('post_id')
 		args = parser.parse_args()
 		try:
+			# Check Authenticated
 			result = Authentication.isAuthenticated()
 			if(result == None):
 				abort(401, "Unauthorised")
 
 			profile_id = result['profile_id']
 			
+			# Delete all foreign key references prior to deleting the post
 			DatabaseConnection.callprocONE("DeleteAllStars", (args['post_id'], ""))
 			DatabaseConnection.callprocONE("DeleteAllTags", (args['post_id'], ""))
 			DatabaseConnection.callprocONE("DeletePost", (args['post_id'], ""))
