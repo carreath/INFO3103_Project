@@ -9,13 +9,21 @@ from __init__ import app
 follow = Blueprint('follow', __name__)
 api = Api(follow, prefix="")
 
-
+# /profile/following GET
+#	If you pass in a profile_id this will return the users following the user
+#   with the specified profile_id
+#
+#   if not then it will return the users following the currently authenticated user
+#
+# 	parameters:
+#		profile_id (optional):
+#
 @app.route("/profile/following")
 def GetFollowing():
 	parser = reqparse.RequestParser()
 	parser.add_argument('profile_id')
 	args = parser.parse_args()
-	
+
 	profile_id = args['profile_id']
 	try:
 		if(profile_id == None):
@@ -29,13 +37,22 @@ def GetFollowing():
 		return make_response(jsonify({"followed":results}), 200)
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
-
+# /profile/following GET
+#	If you pass in a profile_id this will return the users that the user
+#   with the specified profile_id is following
+#
+#   if not then it will return users that are being
+#   followed by the currently authenticated user
+#
+# 	parameters:
+#		profile_id (optional):
+#
 @app.route("/profile/followers")
 def GetFollowers():
 	parser = reqparse.RequestParser()
 	parser.add_argument('profile_id')
 	args = parser.parse_args()
-	
+
 	profile_id = args['profile_id']
 	try:
 		if(profile_id == None):
@@ -51,6 +68,13 @@ def GetFollowers():
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 class Follow(Resource):
+		# /Follow POST
+		#	Creates a connection between 2 users of the currently authenticated
+		#   user following the user with the specified followed_profile_id
+		#
+		# 	parameters:
+		#		followed_profile_id
+		#
 	def post(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('followed_profile_id')
@@ -71,6 +95,13 @@ class Follow(Resource):
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 class UnFollow(Resource):
+		# /Follow DELETE
+		#	Deletes a connection between 2 users of the currently authenticated
+		#   user following the user with the specified followed_profile_id
+		#
+		# 	parameters:
+		#		followed_profile_id
+		#
 	def delete(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('followed_profile_id')
