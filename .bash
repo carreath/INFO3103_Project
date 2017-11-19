@@ -1,2 +1,0 @@
-export PASS=Mrtubtubs15!
-
