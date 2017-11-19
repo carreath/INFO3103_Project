@@ -153,7 +153,7 @@ Get_Comments_On_Post () {
 }
 
 Get_Your_Comments () {
-	echo "Get Comments"
+	echo "Get Your Comments"
 	curl -b cookie-jar http://info3103.cs.unb.ca:$port/profile/comments
 }
 
@@ -340,7 +340,7 @@ CommentTests () {
 	New_Comment
 	New_Comment
 	New_Comment
-	Get_Comments
+	Get_Comments_On_Post
 
 	# TEST 4: get all Comments from you
 	# Output: 200   w/ 7 comment bodies
@@ -416,10 +416,10 @@ ImageTests () {
 	Logout
 }
 
-AuthenticationTest
-ProfileTests
-PostTests
+#AuthenticationTest
+#ProfileTests
+#PostTests
 CommentTests
-FollowerTests
-StarTests
-ImageTests
+#FollowerTests
+#StarTests
+#ImageTests
