@@ -211,6 +211,55 @@ types:
             application/json:
               description: Internal Server Error
 
+
+  /followers:
+    get:
+      queryParameters:
+        profile_id: integer
+      description: If no profile id is passed in then it will return the current users followers
+      responses:
+        200:
+          body:
+            application/json:
+              type: Profile[]
+              description: List of Profiles a specific user is Followed by
+        400:
+          body:
+            application/json:
+              description: Bad Request
+        401:
+          body:
+            application/json:
+              description: You are not logged in
+
+        500:
+          body:
+            application/json:
+              description: Internal Server Error
+  /following:
+    get:
+      queryParameters:
+        profile_id: integer
+      description: If no profile id is passed in then it will return the current users followers
+      responses:
+        200:
+          body:
+            application/json:
+              type: Profile[]
+              description: list of Profiles a specific user is following
+        400:
+          body:
+            application/json:
+              description: Bad Request
+        401:
+          body:
+            application/json:
+              description: You are not logged in
+        500:
+          body:
+            application/json:
+              description: Internal Server Error
+
 /post:
   get:
     queryParameters:
