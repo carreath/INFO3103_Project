@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, abort, make_response,redirect, re
 from flask_restful import reqparse, Resource, Api
 from DBConnection import DatabaseConnection
 from Auth import Authentication
+import Star
 import settings 
 import Image
 from __init__ import app
@@ -11,27 +12,13 @@ from __init__ import app
 post = Blueprint('post', __name__)
 api = Api(post, prefix="")
 
-####################################################################################
-#
-# Error handlers
-#
-@app.errorhandler(400) # decorators to add to 400 response
-def not_found(error):
-	return make_response(jsonify( { 'status': 'Bad request' } ), 400)
-
-@app.errorhandler(404) # decorators to add to 404 response
-def not_found(error):
-	return make_response(jsonify( { 'status': 'Resource not found' } ), 404)
-
-####################################################################################
-
 @app.route("/post/recent")
 def GetRecentPosts():		
 	try:
 		result = DatabaseConnection.callprocALL("GetRecentPosts", ())
 
 		if(result == None):
-			make_response(jsonify({"status": "Posts Do not Exist"}), 404)
+			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 		return make_response(jsonify({"status": result}), 200)
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
@@ -42,26 +29,15 @@ def GetRandomPosts():
 		result = DatabaseConnection.callprocALL("GetRandomPosts", ())
 
 		if(result == None):
-			make_response(jsonify({"status": "Posts Do not Exist"}), 404)
+			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 		return make_response(jsonify({"status": result}), 200)
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 @app.route("/post/starred")
-def GetStarredPosts():		
-	try:
-		result = Authentication.isAuthenticated()
-		profile_id = result['profile_id']
-		if(profile_id == None):
-			return make_response(jsonify({"status", "You are not Logged In"}), 401)
-
-		result = DatabaseConnection.callprocALL("GetStarredPosts", (profile_id, ""))
-
-		if(result == None):
-			make_response(jsonify({"status": "Posts Do not Exist"}), 404)
-		return make_response(jsonify({"posts": result}), 200)
-	except:
-		return make_response(jsonify({"status": "Internal Server Error"}), 500)
+def GetStarredPosts2():		
+	result = Star.getStarredPosts()
+	return make_response(jsonify(result['result']), result['code'])
 
 @app.route("/post/popular")
 def GetPopularPosts():		
@@ -69,7 +45,7 @@ def GetPopularPosts():
 		result = DatabaseConnection.callprocALL("GetPopularPosts", ())
 
 		if(result == None):
-			make_response(jsonify({"status": "Posts Do not Exist"}), 404)
+			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 		return make_response(jsonify({"posts": result}), 200)
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
@@ -80,12 +56,12 @@ def GetFollowerPosts():
 		result = Authentication.isAuthenticated()
 		profile_id = result['profile_id']
 		if(profile_id == None):
-			return make_response(jsonify({"status": "You are not Logged In"}), 401)
+			abort(401, "Unauthorised")
 
 		result = DatabaseConnection.callprocALL("GetFollowedPosts", (profile_id, ""))
 
 		if(result == None):
-			make_response(jsonify({"status": "Posts Do not Exist"}), 404)
+			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 		return make_response(jsonify({"posts": result}), 200)
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
@@ -96,12 +72,12 @@ def GetUserPosts():
 		result = Authentication.isAuthenticated()
 		profile_id = result['profile_id']
 		if(profile_id == None):
-			return make_response(jsonify({"status": "You are not Logged In"}), 401)
+			abort(401, "Unauthorised")
 
 		result = DatabaseConnection.callprocALL("GetUserPosts", (profile_id, ""))
 
 		if(result == None):
-			make_response(jsonify({"status": "Posts Do not Exist"}), 404)
+			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 		return make_response(jsonify({"posts": result}), 200)
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
@@ -114,25 +90,25 @@ class Post(Resource):
 		args = parser.parse_args()
 		try:
 			if args['post_id'] == None and args['profile_id'] == None:
-				abort(400)
+				return make_response(jsonify({"status": "Bad Request"}), 400)
 
 			if args['post_id'] != None:
 				result = DatabaseConnection.callprocONE("GetPost", (args['post_id'], ""))
 				if(result == None):
-					make_response(jsonify({"status": "Post Does Not Exist"}), 404)
-				return make_response(render_template("post.html", imageURI=Image.getImage(result['image_id'])))
+					return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
+				return make_response(jsonify({"post": result}), 200)
 
 			if args['profile_id'] != None:
 				result = DatabaseConnection.callprocALL("GetUserPosts", (args['profile_id'], ""))
 				if(result == None):
-					make_response(jsonify({"status": "Post Does Not Exist"}), 404)
+					return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 				return make_response(jsonify({"posts": result}), 200)
 		except:
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 	def post(self):
 		if not request.json:
-			abort(400) # bad request
+			return make_response(jsonify({"status": "Bad Request"}), 400) # bad request
 
 		parser = reqparse.RequestParser()
 		parser.add_argument('image_id')
@@ -144,15 +120,15 @@ class Post(Resource):
 			result = Authentication.isAuthenticated()
 			profile_id = result['profile_id']
 			if(profile_id == None):
-				return make_response(jsonify({"status": "You are not Logged In"}), 401)
+				abort(401, "Unauthorised")
 
 			if args['image_id'] == None or args['title'] == None or args['description'] == None:
-				abort(400)
+				return make_response(jsonify({"status": "Bad Request"}), 400)
 
 			result = DatabaseConnection.callprocONE("NewPost", (profile_id, args['image_id'], args['title'], args['description']))
 
 			if result['LAST_INSERT_ID()'] == None:
-				abort(400)
+				return make_response(jsonify({"status": "Bad Request"}), 400)
 
 			DatabaseConnection.commit()
 
@@ -163,7 +139,7 @@ class Post(Resource):
 					if(result == None):
 						result = DatabaseConnection.callprocONE("CreateTag", (tag, ""))
 						if result['LAST_INSERT_ID()'] == None:
-							abort(400)
+							return make_response(jsonify({"status": "Bad Request"}), 400)
 						tag_id = result['LAST_INSERT_ID()']
 					else:
 						tag_id = result['id']
@@ -171,7 +147,7 @@ class Post(Resource):
 					DatabaseConnection.callprocONE("AddTags", (post_id, tag_id))
 					DatabaseConnection.commit()
 				except:
-					print("Duplicate Tag " + tag)
+					tag_id = -1
 			return redirect(settings.APP_HOST + ":" + str(settings.APP_PORT) + "/post?post_id=" + str(post_id), code=302)
 		except:
 			DatabaseConnection.rollback()
@@ -187,7 +163,7 @@ class Post(Resource):
 		try:
 			result = Authentication.isAuthenticated()
 			if(result == None):
-				return make_response(jsonify({"status": "You are not Logged In"}), 401)
+				abort(401, "Unauthorised")
 
 			DatabaseConnection.callprocONE("UpdatePost", (args['post_id'], args['title'], args['description']))
 			DatabaseConnection.commit()
@@ -216,7 +192,7 @@ class Post(Resource):
 						DatabaseConnection.callprocONE("AddTags", (args['post_id'], tag_id))
 					newTags.append(tag_id)
 				except:
-					print("Duplicate Tag " + tag)
+					tag_id = -1
 
 			for tag_id in currentTags:
 				try:	
@@ -224,7 +200,7 @@ class Post(Resource):
 						DatabaseConnection.callprocONE("DeleteTags", (args['post_id'], tag_id))
 
 				except:
-					print("Duplicate Tag ID " + tag_id)
+					tag_id = -1
 
 			DatabaseConnection.commit()
 			return redirect(settings.APP_HOST + ":" + str(settings.APP_PORT) + "/post?post_id=" + str(args['post_id']), code=302)
@@ -239,10 +215,12 @@ class Post(Resource):
 		try:
 			result = Authentication.isAuthenticated()
 			if(result == None):
-				return make_response(jsonify({"status": "You are not Logged In"}), 401)
+				abort(401, "Unauthorised")
 
 			profile_id = result['profile_id']
 			
+			DatabaseConnection.callprocONE("DeleteAllStars", (args['post_id'], ""))
+			DatabaseConnection.callprocONE("DeleteAllTags", (args['post_id'], ""))
 			DatabaseConnection.callprocONE("DeletePost", (args['post_id'], ""))
 			DatabaseConnection.commit()
 			return make_response(jsonify({"status": "Post has been deleted"}), 201)

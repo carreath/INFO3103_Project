@@ -23,3 +23,5 @@ APP_HOME = '/var/www/html/creath/'
 UPLOAD_FOLDER = 'images'
 STATIC_FOLDER = 'static'
 TEMPLATE_FOLDER = 'templates'
+
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])

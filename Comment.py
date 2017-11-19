@@ -11,7 +11,7 @@ from Auth import Authentication
 comment = Blueprint('comment', __name__)
 api = Api(comment, prefix="")
 
-
+# Get all comments by either current user or a given user profile_id
 @app.route("/profile/comments")
 def GetCommentsByProfile():
 	parser = reqparse.RequestParser()
@@ -20,17 +20,21 @@ def GetCommentsByProfile():
 	
 	profile_id = args['profile_id']
 	try:
+		#If profile_id is not given we take the current users id
 		if(profile_id == None):
 			result = Authentication.isAuthenticated()
-			if(result['profile_id'] == None):
+			if(result == None):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
+
 
 		results = DatabaseConnection.callprocALL("GetCommentsByUser", (profile_id, ""))
 		return make_response(jsonify({"comments":results}), 200)
 	except:
-		abort(500)
+		return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
+# Class Comments handles all requests to do
+# with comments on posts
 class Comments(Resource):
 	def get(self):
 		parser = reqparse.RequestParser()
@@ -41,7 +45,7 @@ class Comments(Resource):
 			results = DatabaseConnection.callprocALL("GetComments", (args['post_id'], ""))
 			return make_response(jsonify({"comments":results}), 200)
 		except:
-			abort(500)
+			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 	def post(self):
 		parser = reqparse.RequestParser()
@@ -59,7 +63,7 @@ class Comments(Resource):
 			return make_response(jsonify({"status": "Comment has been posted"}), 201)
 		except:
 			DatabaseConnection.rollback()
-			abort(500)
+			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 	def put(self):
 		parser = reqparse.RequestParser()
@@ -76,7 +80,7 @@ class Comments(Resource):
 			return make_response(jsonify({"status": "Comment has been updated"}), 200)
 		except:
 			DatabaseConnection.rollback()
-			abort(500)
+			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 	def delete(self):
 		parser = reqparse.RequestParser()
@@ -93,7 +97,7 @@ class Comments(Resource):
 			return make_response(jsonify({"status": "Comment has been deleted"}), 200)
 		except:
 			DatabaseConnection.rollback()
-			abort(500)
+			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 # Add all resources to the app
 api.add_resource(Comments, '/comment')

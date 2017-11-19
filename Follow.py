@@ -24,10 +24,10 @@ def GetFollowing():
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 
-		results = DatabaseConnection.callprocALL("GetCommentsByUser", (profile_id, ""))
-		return make_response(jsonify({"comments":results}), 200)
+		results = DatabaseConnection.callprocALL("GetFollowed", (profile_id, ""))
+		return make_response(jsonify({"followed":results}), 200)
 	except:
-		abort(500)
+		return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 @app.route("/profile/followers")
 def GetFollowers():
@@ -43,10 +43,10 @@ def GetFollowers():
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 
-		results = DatabaseConnection.callprocALL("GetCommentsByUser", (profile_id, ""))
-		return make_response(jsonify({"comments":results}), 200)
+		results = DatabaseConnection.callprocALL("GetFollowers", (profile_id, ""))
+		return make_response(jsonify({"followers":results}), 200)
 	except:
-		abort(500)
+		return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 class Follow(Resource):
 	def post(self):
@@ -60,11 +60,12 @@ class Follow(Resource):
 				return make_response(jsonify({"status": "You are not Logged In"}), 401)
 			profile_id = result['profile_id']
 
-			DatabaseConnection.callprocONE("CreateFollow", (args['followed_profile_id'], profile_id))
-			return make_response(jsonify({"status": "Successfully following someone"}), 201)
+			result = DatabaseConnection.callprocONE("CreateFollow", (args['followed_profile_id'], profile_id))
+			DatabaseConnection.commit()
+			return make_response(jsonify({"status": "Successfully Followed Someone"}), 201)
 		except:
 			DatabaseConnection.rollback()
-			abort(500)
+			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 class UnFollow(Resource):
 	def delete(self):
@@ -79,10 +80,11 @@ class UnFollow(Resource):
 			profile_id = result['profile_id']
 
 			DatabaseConnection.callprocONE("UnFollow", (args['followed_profile_id'], profile_id))
+			DatabaseConnection.commit()
 			return make_response(jsonify({"status": "Successfully UnFollowed"}), 200)
 		except:
 			DatabaseConnection.rollback()
-			abort(500)
+			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 # Add all resources to the app
 api.add_resource(Follow, '/follow')

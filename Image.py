@@ -1,62 +1,41 @@
 #!/usr/bin/env python3.6
-import os
 from flask import Blueprint, jsonify, abort, request, make_response, url_for, render_template, send_from_directory
 from flask_restful import reqparse, Resource, Api
-from werkzeug.utils import secure_filename
-import settings
-from __init__ import app
 from DBConnection import DatabaseConnection
+from werkzeug.utils import secure_filename
 from Auth import Authentication
+from __init__ import app
+import settings
 import uuid
+import os
 
 
 # Initialize this python file as a flask blueprint and define api
 image = Blueprint('image', __name__)
 api = Api(image, prefix="")
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
-
-####################################################################################
-#
-# Error handlers
-#
-@app.errorhandler(400) # decorators to add to 400 response
-def not_found(error):
-		return make_response(jsonify( { 'status': 'Bad request' } ), 400)
-
-@app.errorhandler(401) # decorators to add to 404 response
-def not_found(error):
-		return make_response(jsonify( { 'status': 'Unauthorised' } ), 401)
-
-@app.errorhandler(404) # decorators to add to 404 response
-def not_found(error):
-		return make_response(jsonify( { 'status': 'Resource not found' } ), 404)
-
-@app.errorhandler(500) # decorators to add to 404 response
-def not_found(error):
-		return make_response(jsonify( { 'status': 'Internal Server Error' } ), 500)
-
-@app.errorhandler(501) # decorators to add to 404 response
-def not_found(error):
-		return make_response(jsonify( { 'status': 'Something Went Wrong' } ), 501)
-
-####################################################################################
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1] in settings.ALLOWED_EXTENSIONS
 
 def getImage(image_id):
-	try:
-		result = DatabaseConnection.callprocONE("GetImage", (image_id, ""))
+	result = DatabaseConnection.callprocONE("GetImage", (image_id, ""))
 
-		return result['uri']
-	except:
-		return ""
+	return result['uri']
 
 class Image(Resource):
+	def get(self):
+		parser = reqparse.RequestParser()
+		parser.add_argument('image_id')
+		args = parser.parse_args()
+		try:
+			return make_response(jsonify({"imageURI": getImage(args['image_id'])}), 200)
+		except:
+			return make_response(jsonify({"status": "Internal Server Error"}), 500)
+
 	def post(self):
 		result = Authentication.isAuthenticated()
-		if(result['profile_id'] == None):
+		if(result == None):
 			return make_response(jsonify({"status": "You are not Logged In"}), 401)
 		profile_id = result['profile_id']
 
@@ -81,7 +60,7 @@ class Image(Resource):
 				return make_response(jsonify({"status": "Image Uploaded Successfully"}), 201)
 		except:
 			DatabaseConnection.rollback()
-			abort(500)
+			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 	def delete(self):
 		parser = reqparse.RequestParser()
@@ -103,7 +82,7 @@ class Image(Resource):
 
 		except:
 			DatabaseConnection.rollback()
-			abort(500)
+			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
 # Add all resources to the app
 api.add_resource(Image, '/img')

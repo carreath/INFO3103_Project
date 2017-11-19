@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.6
-from flask import Blueprint, request, jsonify, abort, make_response, session
+from flask import Blueprint, request, jsonify, abort, make_response, session,redirect
 from flask_restful import reqparse, Resource, Api
 from DBConnection import DatabaseConnection
 from ldap3 import Server, Connection, ALL
@@ -46,12 +46,10 @@ class Authentication():
 
 			#if the DB doesnt have one set it to ""
 			if(result == None):
-				result = ""
-			else:
-				result = result['id']
+				return None
 
 			#return object for use in the calling function
-			return {"profile_id": result, "username": session['username']}
+			return {"profile_id": result['id'], "username": session['username']}
 		else:
 			#Not authenticated returns None
 			return None
@@ -109,13 +107,19 @@ class Login(Resource):
 				if result == None:
 					try:
 						result = DatabaseConnection.callprocONE("NewProfile", (session['username'], ""))
+						profile_id = result['LAST_INSERT_ID()']
+						DatabaseConnection.commit()
 					except:
 						DatabaseConnection.rollback()
 						return make_response(jsonify({"status": "Unknown error has occurred"}), 500)
-				DatabaseConnection.commit()
-				return redirect(settings.APP_HOST + ":" + settings.APP_PORT + "/profile?profile_id=" + result['profile_id'], code=302)
+				else:
+					profile_id = result['id']
+
+				return redirect(settings.APP_HOST + ":" + str(settings.APP_PORT) + "/profile?profile_id=" + str(profile_id), code=302)
 		except:
 			DatabaseConnection.rollback()
+			print("Profile Not Created")
+			abort(500)
 		return make_response(jsonify(response), responseCode)
 
 
