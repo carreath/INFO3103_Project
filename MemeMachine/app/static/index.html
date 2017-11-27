@@ -8,6 +8,11 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.15/angular-ui-router.min.js"></script>
+    <script>
+      function goBack() {
+          window.history.back()
+      }
+    </script>
     <script src = "js/list.js"></script>
   </head>
   <body>
@@ -25,7 +30,7 @@
 
         <div class="col-md-12">
           <div class="page-footer">
-            <h1>IM THE FOOTER</h1>
+            <h7>&reg; 2017 Reath Jared inc.</h7>
           </div>
         </div>
       </div>
@@ -58,8 +63,27 @@
         <div class="col-md-12">
           <h3>Profile</h3>
         
-          <a ng-click="logout()">Logout</a>
+          <input type="button" value="Post" ng-click="post()">
+          <input type="button" value="logout" ng-click="logout()">
         </div>
+      </script>
+
+      <script type="text/ng-template" id="post.html">
+        <div class="col-md-12">
+          <h3>POSTS</h3>
+
+          <input type="button" value="Recent" ng-click="getRecent()">
+          <input type="button" value="Random" ng-click="getRandom()">
+          <input type="button" value="Popular" ng-click="getPopular()">
+          <input type="button" value="Starred" ng-click="getStarred()">
+          <input type="button" value="Back" onclick="goBack()">
+        </div>
+        <table>
+          <tr *ngFor="post in posts" class="col-md-12">
+            <img src="getImage(post.image_id)">
+            <p>{{title}}</p>
+          </tr>
+        </table>
       </script>
     </div>
   </body>

@@ -578,7 +578,7 @@ Insert Into Profile (username, display_name)
 
 
 Insert Into Image(profile_id, name, uri)
-	Values(1, 'image 1', 'i dont know yet');
+	Values(1, 'image 1', '8e2421f2-f7c9-442a-9fb5-d7fd60a87bce.jpg');
 Insert Into Image(profile_id, name, uri)
 	Values(2, 'image 2', 'i dont know yet');
 Insert Into Image(profile_id, name, uri)

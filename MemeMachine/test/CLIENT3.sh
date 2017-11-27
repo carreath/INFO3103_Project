@@ -80,214 +80,216 @@ Check_Response () {
 	else
 		echo -e ${SUCCESS}$HTTP_STATUS
 		if [ $2 == true ]; then
-			echo -e ${SUCCESS}$HTTP_BODY${NC}	
+			echo -e $SUCCESS
+			echo -e "RAW DATA: $HTTP_BODY"
+			echo -e $HTTP_BODY | python -m json.tool
 		fi
 	fi
-	echo -e "\n"
+	echo -e "${NC}\n"
 }
 
 ResetDatabase () {
 	mysql -u creath -pP3OO9JnQ -D creath -e "source ../sql/1.sql"
 }
 Login () {
-	echo "Login"
+	echo "Login: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X POST -d '{"username": "'$username'", "password": "'$password'"}' -c cookie-jar http://info3103.cs.unb.ca:$port/login)
 	Check_Response $1 $2
 }
 Logout () {
-	echo "LOGOUT"
+	echo "LOGOUT: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -b cookie-jar http://info3103.cs.unb.ca:$port/logout)
 	Check_Response $1 $2
 }
 Get_Your_Profile () {
-	echo "GetYourProfile"
+	echo "GetYourProfile: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/profile)
 	Check_Response $1 $2
 }
 Get_User1_Profile () {
-	echo "GetProfile id=1"
+	echo "GetProfile id=1: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/profile?profile_id=1)
 	Check_Response $1 $2
 }
 Update_Profile () {
-	echo "Update Profile"
+	echo "Update Profile: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X PUT -d '{"display_name": "NEW_DISPLAYNAME"}' -b cookie-jar http://info3103.cs.unb.ca:$port/profile)
 	Check_Response $1 $2
 }
 Get_Recent_Posts () {
-	echo "Get Recent Posts"
+	echo "Get Recent Posts: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/post/recent)
 	Check_Response $1 $2
 }
 Get_Random_Posts () {
-	echo "Get Random Posts"
+	echo "Get Random Posts: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/post/random)
 	Check_Response $1 $2
 }
 Get_Popular_Posts () {
-	echo "Get Popular Posts"
+	echo "Get Popular Posts: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/post/popular)
 	Check_Response $1 $2
 }
 Get_Followed_Posts () {
-	echo "Get Posts from people you follow"
+	echo "Get Posts from people you follow: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/post/following)
 	Check_Response $1 $2
 }
 Get_Starred_Posts () {
-	echo "Get Starred Posts"
+	echo "Get Starred Posts: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/post/starred)
 	Check_Response $1 $2
 }
 Get_User1_Posts () {
-	echo "Get Posts from Profile 1"
+	echo "Get Posts from Profile 1: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/post?profile_id=1)
 	Check_Response $1 $2
 }
 Get_Specific_Post () {
-	echo "Get Specific Posts"
+	echo "Get Specific Posts: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/post?post_id=5)
 	Check_Response $1 $2
 }
 New_Post () {
-	echo "New Post"
+	echo "New Post: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X POST -d '{"image_id": 1, "title": "TEST NEW POST", "description": "TEST DESCRIPTION", "tags": ["Funny","Hilarious","UNB","RICK"]}' -b cookie-jar http://info3103.cs.unb.ca:$port/post)
 	Check_Response $1 $2
 }
 Update_Post () {
-	echo "Update Post"
+	echo "Update Post: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X PUT -d '{"post_id": 5, "title": "TEST UPDATE ", "description": "NEW UPDATE TEST DESCRIPTION", "tags": ["Funny","Hilarious","UNB","NOT RICK"]}' -b cookie-jar http://info3103.cs.unb.ca:$port/post)
 	Check_Response $1 $2
 }
 Delete_Post () {
-	echo "Delete Post"
+	echo "Delete Post: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -d '{"post_id": 5}' -b cookie-jar http://info3103.cs.unb.ca:$port/post)
 	Check_Response $1 $2
 }
 New_Image () {
-	echo "New Image"
+	echo "New Image: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -X POST -F "image=@./TestImages/test.jpg" -b cookie-jar http://info3103.cs.unb.ca:$port/img)
 	Check_Response $1 $2
 }
 Get_Image_From_Post () {
-	echo "Get Image"
+	echo "Get Image: expected output: $1"
 	New_Post
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -X GET -b cookie-jar http://info3103.cs.unb.ca:$port/post?post_id=5)
 	Check_Response $1 $2
 }
 Update_Image () {
-	echo "Update Post"
+	echo "Update Post: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X PUT -d '{"post_id": 5, "title": "TEST UPDATE ", "description": "NEW UPDATE TEST DESCRIPTION", "tags": ["Funny","Hilarious","UNB","NOT RICK"]}' -b cookie-jar http://info3103.cs.unb.ca:$port/post)
 	Check_Response $1 $2
 }
 Delete_Image_FAIL () {
-	echo "Delete Image When Attached To Post 5"
+	echo "Delete Image When Attached To Post 5: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -d '{"image_id": 5}' -b cookie-jar http://info3103.cs.unb.ca:$port/img)
 	Check_Response $1 $2
 }
 Delete_Image_PASS () {
 	Delete_Post
-	echo "Delete Image After Post 5 Delete"
+	echo "Delete Image After Post 5 Delete: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -d '{"image_id": 5}' -b cookie-jar http://info3103.cs.unb.ca:$port/img)
 	Check_Response $1 $2
 }
 
 New_Comment () {
-	echo "New Comment on Post 1"
+	echo "New Comment on Post 1: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X POST -d '{"post_id": 1, "comment_body": "TEST NEW Comment"}' -b cookie-jar http://info3103.cs.unb.ca:$port/comment)
 	Check_Response $1 $2
 }
 Get_Comments_On_Post () {
-	echo "Get Comments For Post 1"
+	echo "Get Comments For Post 1: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   http://info3103.cs.unb.ca:$port/comment?post_id=1)
 	Check_Response $1 $2
 }
 Get_Your_Comments () {
-	echo "Get Your Comments"
+	echo "Get Your Comments: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"  -b cookie-jar http://info3103.cs.unb.ca:$port/profile/comments)
 	Check_Response $1 $2
 }
 Get_User1_Comments () {
-	echo "Get Comments by User 1"
+	echo "Get Comments by User 1: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   http://info3103.cs.unb.ca:$port/profile/comments?profile_id=1)
 	Check_Response $1 $2
 }
 Update_Comment () {
 	Delete_Post
-	echo "Delete Image After Post 5 Delete"
+	echo "Delete Image After Post 5 Delete: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -d '{"image_id": 5}' -b cookie-jar http://info3103.cs.unb.ca:$port/img)
 	Check_Response $1 $2
 }
 Delete_Comment () {
-	echo "Delete Comment"
+	echo "Delete Comment: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -d '{"comment_id": 7}' -b cookie-jar http://info3103.cs.unb.ca:$port/comment)
 	Check_Response $1 $2
 }
 Follow () {
-	echo "Follow Someone"
+	echo "Follow Someone: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X POST -d '{"followed_profile_id":1}' -b cookie-jar http://info3103.cs.unb.ca:$port/follow)
 	Check_Response $1 $2
 }
 Get_Your_Followers () {
-	echo "Get people who Follow you"
+	echo "Get people who Follow you: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -b cookie-jar http://info3103.cs.unb.ca:$port/profile/following)
 	Check_Response $1 $2
 }
 Get_User1_Followers () {
-	echo "Get People Profile 1 is following"
+	echo "Get People Profile 1 is following: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -b cookie-jar http://info3103.cs.unb.ca:$port/profile/followers?profile_id=1)
 	Check_Response $1 $2
 }
 Get_People_You_Follow () {
-	echo "Get People You Follow"
+	echo "Get People You Follow: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -b cookie-jar http://info3103.cs.unb.ca:$port/profile/followers)
 	Check_Response $1 $2
 }
 Get_People_Following_User1 () {
-	echo "Get People Following Profile 1"
+	echo "Get People Following Profile 1: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -b cookie-jar http://info3103.cs.unb.ca:$port/profile/following?profile_id=1)
 	Check_Response $1 $2
 }
 UnFollow () {
-	echo "UnFollow"
+	echo "UnFollow: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -d '{"followed_profile_id": 1}' -b cookie-jar http://info3103.cs.unb.ca:$port/unfollow)
 	Check_Response $1 $2
 }
 Create_Star () {
-	echo "New Star Created"
+	echo "New Star Created: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X POST -d '{"post_id":1}' -b cookie-jar http://info3103.cs.unb.ca:$port/star)
 
 	Check_Response $1 $2
 }
 Create_Star () {
-	echo "New Star 2 Created"
+	echo "New Star 2 Created: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X POST -d '{"post_id":2}' -b cookie-jar http://info3103.cs.unb.ca:$port/star)
 
 	Check_Response $1 $2
 }
 Remove_Star (){
-	echo "Star Removed"
+	echo "Star Removed: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -d '{"post_id": 1}' -b cookie-jar http://info3103.cs.unb.ca:$port/star)
 	Check_Response $1 $2
 }
 Get_Image_from_Image (){
-	echo "Get Image"
+	echo "Get Image: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -X GET -b cookie-jar http://info3103.cs.unb.ca:$port/img?image_id=5)
 	Check_Response $1 $2
 }
 Create_Image () {
-	echo "New Image Created"
+	echo "New Image Created: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -X POST -F "image=@./TestImages/test.jpg" -b cookie-jar http://info3103.cs.unb.ca:$port/img)
 
 	Check_Response $1 $2
 }
 Remove_Image (){
-	echo "Remove Image"
+	echo "Remove Image: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -d '{"image_id": 5}' -b cookie-jar http://info3103.cs.unb.ca:$port/img)
 	Check_Response $1 $2
 }
 Remove_used_Image (){
-	echo "Remove used Image	should fail"
+	echo "Remove used Image: expected output: $1"
 	HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}"   -H "Content-Type: application/json" -X DELETE -d '{"image_id": 1}' -b cookie-jar http://info3103.cs.unb.ca:$port/img)
 	Check_Response $1 $2
 }
@@ -305,14 +307,14 @@ AuthenticationTest () {
 
 	# TEST 1: Login - Logout
 	# Output: 201	 200
-	Login 201 true
+	Login 302 true
 	Logout 200 true
 
 
 	# TEST 2: Access Data - Login - Access Data - Logout - Access Data
 	# Output: 401		   201	 200		   200	  401
 	Get_Your_Comments 401 true
-	Login 201 true
+	Login 302 true
 	Get_Your_Comments 200 true
 	Logout 200 true
 	Get_Your_Comments 401 true
@@ -323,14 +325,14 @@ ProfileTests () {
 	echo "			Profile TESTS			   "
 	echo "########################################"
 	ResetDatabase
-	Login 201 false
+	Login 302 false
 
 
 	Get_Your_Profile 200 true
 
 	Get_User1_Profile 200 true
 
-	Update_Profile 200 true
+	Update_Profile 202 true
 
 	Get_Your_Profile 200 true
 
@@ -343,11 +345,11 @@ PostTests () {
 	echo "			 Post TESTS				 "
 	echo "########################################"
 	ResetDatabase
-	Login 201 false
+	Login 302 false
 
 	New_Post 302 true
 	Get_Specific_Post 200 true
-	Update_Post 200 true
+	Update_Post 302 true
 	Get_Specific_Post 200 true
 
 	Create_Star 201 true
@@ -361,7 +363,7 @@ PostTests () {
 	Get_Starred_Posts 200 true
 	Get_User1_Posts 200 true
 
-	Delete_Post 200 true
+	Delete_Post 201 true
 
 	Logout 200 false
 }
@@ -371,7 +373,7 @@ CommentTests () {
 	echo "			Comment TESTS			   "
 	echo "########################################"
 	ResetDatabase
-	Login 201 false
+	Login 302 false
 
 	# TEST 1: Create Comment
 	# Output: 201
@@ -384,12 +386,12 @@ CommentTests () {
 
 	# TEST 3: get all Comments from post 1
 	# Output: 200   w/ 8ish comment bodies
-	New_Comment 200 false
-	New_Comment 200 false
-	New_Comment 200 false
-	New_Comment 200 false
-	New_Comment 200 false
-	New_Comment 200 false
+	New_Comment 201 false
+	New_Comment 201 false
+	New_Comment 201 false
+	New_Comment 201 false
+	New_Comment 201 false
+	New_Comment 201 false
 	Get_Comments_On_Post 200 true
 
 	# TEST 4: get all Comments from you
@@ -417,7 +419,7 @@ FollowerTests () {
 	echo "		   Follower TESTS			   "
 	echo "########################################"
 	ResetDatabase
-	Login 201 false
+	Login 302 false
 
 
 	Follow 201 true
@@ -440,7 +442,7 @@ StarTests () {
 	echo "			 Star TESTS				 "
 	echo "########################################"
 	ResetDatabase
-	Login 201 false
+	Login 302 false
 
 	Create_Star 201 true
 
@@ -455,12 +457,12 @@ ImageTests () {
 	echo "			Image TESTS				"
 	echo "########################################"
 	ResetDatabase
-	Login 201 false
+	Login 302 false
 
 	Create_Image 201 true
 	Get_Image_from_Image 200 true
   	Remove_Image 200 true
-	Get_Image_from_Image 200 true
+	Get_Image_from_Image 500 true
 	Remove_used_Image 400 true
 
 	Logout 200 false
