@@ -32,10 +32,20 @@
         templateUrl : 'profile.html',
         controller : 'ProfileController'
       })
+      .state('posts', {
+        url : '/post',
+        templateUrl : 'posts.html',
+        controller : 'PostController'
+      })
       .state('post', {
         url : '/post',
         templateUrl : 'post.html',
-        controller : 'PostController'
+        controller : 'NewPostController'
+      })
+      .state('newPost', {
+        url : '/post/new',
+        templateUrl : 'new-post.html',
+        controller : 'NewPostController'
       });
   }]);
 
@@ -51,6 +61,38 @@
       }).error(function(data) {
         $scope.error = "Incorrect username/password!";
       });  
+    };   
+  });
+
+  app.controller('NewPostController', function($scope, $http, $rootScope, $stateParams, $state, LoginService) {
+    $rootScope.title = "Meme Machine";
+
+    $scope.uploadFile = function(files) {
+        var fd = new FormData();
+        //Take the first selected file
+        fd.append("image", files[0]);
+
+        $http.post('http://info3103.cs.unb.ca:14637/img', fd, {
+            withCredentials: true,
+            headers: {'Content-Type': undefined },
+            transformRequest: angular.identity
+        }).success(function(data) {
+          $scope.image_id = data.image_id['LAST_INSERT_ID()'];
+        });
+
+    };
+
+    $scope.formSubmit = function() {
+      console.log( {'image_id': $scope.image_id, 'title': $scope.title, 'description': $scope.description, 'tags': [$scope.tags]});
+      $http.post('http://info3103.cs.unb.ca:14637/post', {'image_id': $scope.image_id, 'title': $scope.title, 'description': $scope.description, 'tags': [$scope.tags]}).success(function(data) {        
+        $scope.image_id = '';
+        $scope.title = '';
+        $scope.description = '';
+        $state.transitionTo('post'); 
+      }).error(function(data) {
+        console.log(data);
+        $scope.error = "Incorrect username/password!";
+      });
     };   
   });
   
@@ -84,18 +126,42 @@
     
   });
 
-  app.controller('PostController', function($scope, $rootScope, $stateParams, $state, PostService) {
+  app.controller('PostController', function($scope, $rootScope, $stateParams, $state, PostService, $http) {
     $rootScope.title = "AngularJS Post Sample";
-    
+    $scope.posts = [];
+
+    var formatPosts = function(arr, size) {
+      var newArr = [];
+      for (var i=0; i<arr.length; i+=size) {
+        newArr.push(arr.slice(i, i+size));
+      }
+      return newArr;
+    }
+
     $scope.getRecent = function() {
       PostService.getRecentPosts().success(function(data) {
         $scope.posts = data.posts;
+        $scope.chunkedData = formatPosts($scope.posts, 4);
       });
     }
-    $scope.getImage = function(image_id) {
-      $http.get('http://info3103.cs.unb.ca:14637/img?image_id=' + image_id).then(function(data) {
-        return data;
+
+    $scope.getRandom = function() {
+      PostService.getRandomPosts().success(function(data) {
+        console.log(data);
+        $scope.posts = data.posts;
+        $scope.chunkedData = formatPosts($scope.posts, 4);
       });
+    }
+
+    $scope.getPopular = function() {
+      PostService.getPopularPosts().success(function(data) {
+        $scope.posts = data.posts;
+        $scope.chunkedData = formatPosts($scope.posts, 4);
+      });
+    }
+
+    $scope.createPost = function() {
+      $state.transitionTo('newPost');
     }
   });
 
@@ -116,23 +182,19 @@
         return isAuthenticated;
       },
       getRecentPosts : function() {
-      	return $http.get('http://info3103.cs.unb.ca:14637/post/recent');
+        return $http.get('http://info3103.cs.unb.ca:14637/post/recent');
       },
       getRandomPosts : function() {
-      	//Get POST of id == id
-        return isAuthenticated;
+        return $http.get('http://info3103.cs.unb.ca:14637/post/random');
       },
       getStarredPosts : function() {
-      	//Get POST of id == id
-        return isAuthenticated;
+        return $http.get('http://info3103.cs.unb.ca:14637/post/recent');
       },
       getFollowingPosts : function() {
-      	//Get POST of id == id
-        return isAuthenticated;
+        return $http.get('http://info3103.cs.unb.ca:14637/post/recent');
       },
       getPopularPosts : function() {
-      	//Get POST of id == id
-        return isAuthenticated;
+        return $http.get('http://info3103.cs.unb.ca:14637/post/popular');
       }
     };
     

@@ -25,9 +25,11 @@ import sys
 import hashlib, uuid
 import math
 import os
+from flask_cors import CORS
 
 app = Flask(__name__, static_url_path='') 
 api = Api(app) 
+CORS(app)
 
 # Define the LDap security variables
 app.secret_key = settings.SECRET_KEY
@@ -45,29 +47,29 @@ Session(app)
 @app.errorhandler(400) # decorators to add to 400 response
 def BadRequest(error):
 	message = 'Bad Request'
-	if error.description['message'] == None:
-		message = error.description['message']
+	if error.description == None:
+		message = error.description
 	return make_response(jsonify( { 'message': message } ), 400)
 
 @app.errorhandler(401) # decorators to add to 401 response
 def Unauthorised(error):
 	message = 'Unauthorised'
-	if error.description['message'] == None:
-		message = error.description['message']
+	if error.description == None:
+		message = error.description
 	return make_response(jsonify( { 'message': message } ), 401)
 
 @app.errorhandler(404) # decorators to add to 404 response
 def NotFound(error):
 	message = 'Resource not found'
-	if error.description['message'] == None:
-		message = error.description['message']
+	if error.description == None:
+		message = error.description
 	return make_response(jsonify( { 'message': message } ), 404)
 
 @app.errorhandler(500) # decorators to add to 500 response
 def InternalError(error):
 	message = 'Internal Server Error'
-	if error.description['message'] == None:
-		message = error.description['message']
+	if error.description == None:
+		message = error.description
 	return make_response(jsonify( { 'message': message } ), 500)
 
 ####################################################################################
@@ -246,12 +248,9 @@ class Image(Resource):
 	def get(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('image_id')
-		parser.add_argument('UUID')
 		args = parser.parse_args()
 		try:
-			if(args['UUID'] == None):
-				print(getImage(args['image_id']))
-				return send_from_directory("images", getImage(args['image_id']))
+			return send_from_directory("images", getImage(args['image_id']))
 		except:
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
 	# /img POST
@@ -273,6 +272,7 @@ class Image(Resource):
 					print('No image part')
 					abort(404)
 				image = request.files['image']
+
 				# if user does not select image, browser also
 				# submit a empty part without filename
 				if image.filename == '':
@@ -281,10 +281,10 @@ class Image(Resource):
 				if image and allowed_file(image.filename):
 					filename = secure_filename(image.filename)
 					unique_filename = str(uuid.uuid4()) + "." + filename.rsplit('.', 1)[1]
-					image.save(os.path.join(settings.UPLOAD_FOLDER, unique_filename))
-				DatabaseConnection.callprocONE("NewImage", (profile_id, image.filename,unique_filename))
+					image.save(os.path.join(settings.STATIC_FOLDER, settings.UPLOAD_FOLDER, unique_filename))
+				image_id = DatabaseConnection.callprocONE("NewImage", (profile_id, image.filename,unique_filename))
 				DatabaseConnection.commit()
-				return make_response(jsonify({"status": "Image Uploaded Successfully"}), 201)
+				return make_response(jsonify({"image_id": image_id}), 201)
 		except:
 			DatabaseConnection.rollback()
 			return make_response(jsonify({"status": "Internal Server Error"}), 500)
@@ -406,6 +406,10 @@ def GetRecentPosts():
 	try:
 		result = DatabaseConnection.callprocALL("GetRecentPosts", ())
 
+		for post in result:
+			imageObj = DatabaseConnection.callprocONE("GetImage", (post['image_id'], ""))
+			post['uri'] = imageObj['uri']
+
 		if(result == None):
 			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 		return make_response(jsonify({"posts": result}), 200)
@@ -420,9 +424,13 @@ def GetRandomPosts():
 	try:
 		result = DatabaseConnection.callprocALL("GetRandomPosts", ())
 
+		for post in result:
+			imageObj = DatabaseConnection.callprocONE("GetImage", (post['image_id'], ""))
+			post['uri'] = imageObj['uri']
+
 		if(result == None):
 			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
-		return make_response(jsonify({"status": result}), 200)
+		return make_response(jsonify({"posts": result}), 200)
 	except:
 		return make_response(jsonify({"status": "Internal Server Error"}), 500)
 
@@ -432,6 +440,11 @@ def GetRandomPosts():
 @app.route("/post/starred")
 def GetStarredPosts2():		
 	result = getStarredPosts()
+
+	for post in result:
+		imageObj = DatabaseConnection.callprocONE("GetImage", (post['image_id'], ""))
+		post['uri'] = imageObj['uri']
+		
 	return make_response(jsonify(result['result']), result['code'])
 
 # /profile GET
@@ -442,6 +455,10 @@ def GetPopularPosts():
 	try:
 		result = DatabaseConnection.callprocALL("GetPopularPosts", ())
 
+		for post in result:
+			imageObj = DatabaseConnection.callprocONE("GetImage", (post['image_id'], ""))
+			post['uri'] = imageObj['uri']
+			
 		if(result == None):
 			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 		return make_response(jsonify({"posts": result}), 200)
@@ -461,6 +478,10 @@ def GetFollowedPosts():
 
 		result = DatabaseConnection.callprocALL("GetFollowedPosts", (profile_id, ""))
 
+		for post in result:
+			imageObj = DatabaseConnection.callprocONE("GetImage", (post['image_id'], ""))
+			post['uri'] = imageObj['uri']
+			
 		if(result == None):
 			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 		return make_response(jsonify({"posts": result}), 200)
@@ -484,6 +505,10 @@ def GetUserPosts():
 
 		result = DatabaseConnection.callprocALL("GetUserPosts", (profile_id, ""))
 
+		for post in result:
+			imageObj = DatabaseConnection.callprocONE("GetImage", (post['image_id'], ""))
+			post['uri'] = imageObj['uri']
+			
 		if(result == None):
 			return make_response(jsonify( {"message": "Posts Do not Exist"}), 404)
 		return make_response(jsonify({"posts": result}), 200)
@@ -603,7 +628,7 @@ class Post(Resource):
 					tag_id = -1
 
 			# When the post is fully built redirect the user to their new post
-			return redirect(settings.APP_HOST + ":" + str(settings.APP_PORT) + "/post?post_id=" + str(post_id), code=302)
+			return make_response(jsonify({'post_id': post_id}), 200)
 		except:
 			# There was an issue if we got here...
 			DatabaseConnection.rollback()

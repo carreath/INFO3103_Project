@@ -72,7 +72,7 @@ CREATE TABLE Image (
    id int NOT NULL AUTO_INCREMENT,
    profile_id int NOT NULL,
    name varchar(255) NOT NULL,
-   uri varchar(255) NOT NULL,
+   uri varchar(255) NOT NULL UNIQUE,
    PRIMARY KEY (id),
    FOREIGN KEY (profile_id) REFERENCES Profile(id)
 );
@@ -578,16 +578,18 @@ Insert Into Profile (username, display_name)
 
 
 Insert Into Image(profile_id, name, uri)
-	Values(1, 'image 1', '8e2421f2-f7c9-442a-9fb5-d7fd60a87bce.jpg');
+	Values(1, 'image 1', 'test.jpg');
 Insert Into Image(profile_id, name, uri)
-	Values(2, 'image 2', 'i dont know yet');
+	Values(2, 'image 2', 'test2.png');
 Insert Into Image(profile_id, name, uri)
-	Values(3, 'image 3', 'i dont know yet');
+	Values(3, 'image 3', 'test3.jpeg');
 Insert Into Image(profile_id, name, uri)
-	Values(4, 'image 4', 'i dont know yet');
+	Values(4, 'image 4', 'test4.gif');
 
 
 
+Insert Into Post(profile_id, image_id, title, description)
+	Values(1, 1, 'post1', 'this is the first post');
 Insert Into Post(profile_id, image_id, title, description)
 	Values(1, 1, 'post1', 'this is the first post');
 Insert Into Post(profile_id, image_id, title, description)

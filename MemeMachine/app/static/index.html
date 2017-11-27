@@ -68,7 +68,7 @@
         </div>
       </script>
 
-      <script type="text/ng-template" id="post.html">
+      <script type="text/ng-template" id="posts.html">
         <div class="col-md-12">
           <h3>POSTS</h3>
 
@@ -76,14 +76,75 @@
           <input type="button" value="Random" ng-click="getRandom()">
           <input type="button" value="Popular" ng-click="getPopular()">
           <input type="button" value="Starred" ng-click="getStarred()">
+          <input type="button" value="Create Post" ng-click="createPost()">
           <input type="button" value="Back" onclick="goBack()">
         </div>
-        <table>
-          <tr *ngFor="post in posts" class="col-md-12">
-            <img src="getImage(post.image_id)">
-            <p>{{title}}</p>
-          </tr>
+        <table class='table table-striped'>
+          <thead>
+            <th style="width:33%"></th>
+            <th style="width:33%"></th>
+            <th style="width:33%"></th>
+          </thead>
+          <tbody>
+            <tr ng-repeat="chunk in chunkedData">
+              <td ng-repeat="post in chunk">
+                <img ng-src="images/{{post.uri}}" style="height: 100px">
+                <a style="color: #c50e0e" href="http://info3103.cs.unb.ca:14637/post?post_id={{post.id}}">[http://info3103.cs.unb.ca:14637/post?post_id={{post.id}}]</a>
+                <p>{{post.title}}</p>
+                <p>{{post.description}}</p>
+                <p>{{post.profile_id}}</p>
+              </td>
+            </tr>
+        </tbody>
         </table>
+      </script>
+
+      <script type="text/ng-template" id="post.html">
+        <div class="col-md-12">
+          <h3>POST</h3>
+          <input type="button" value="Back" onclick="goBack()">
+        </div>
+        <div>
+          <img ng-src="{{getImage(post.image_id)}}" style="height: 500px">
+          <a style="color: #c50e0e" href="http://info3103.cs.unb.ca:14637/post?post_id={{post.id}}">[http://info3103.cs.unb.ca:14637/post?post_id={{post.id}}]</a>
+          <p>{{post.title}}</p>
+          <p>{{post.description}}</p>
+          <p>{{post.profile_id}}</p>
+        </div>
+      </script>
+
+      <script type="text/ng-template" id="new-post.html">
+        <div class="col-md-12">
+          <h3>Post an Image</h3>
+          <input type="button" value="Back" onclick="goBack()">
+    
+
+          <form ng-submit="formSubmit()" class="form">
+            <div class="col-md-4">
+              <div class="form-group">
+                <input type="text" class="form-control" ng-model="title" placeholder="title" required=""/>
+              </div> 
+
+              <div class="col-md-6">
+                  <input type="file" name="file" onchange="angular.element(this).scope().uploadFile(this.files)"/>
+              </div>
+
+              <div class="form-group">
+                <input type="text" class="form-control" ng-model="description" placeholder="description" required=""/>
+              </div>
+
+              <div class="form-group">
+                <input type="text" class="form-control" ng-model="tags" placeholder="tags" required=""/>
+              </div>
+
+              <div class="form-group">
+                <button type="submit" class="btn btn-success">Post</button>
+                <span class="text-danger">{{ error }}</span>
+              </div>
+
+            </div>
+          </form>
+        </div>
       </script>
     </div>
   </body>
