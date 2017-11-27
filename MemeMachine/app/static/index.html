@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.15/angular-ui-router.min.js"></script>
+    <script src = "js/list.js"></script>
+  </head>
+  <body>
+    <div class="container" ng-app="myApp">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="page-header">
+            <h1>{{ title }}</h1>
+          </div>
+        </div>
+        
+        <!-- THIS IS WHERE THE SCRIPTS BELOW REPLACE WHEN THEY ARE RENDERED -->
+        <div ui-view></div>
+        
+
+        <div class="col-md-12">
+          <div class="page-footer">
+            <h1>IM THE FOOTER</h1>
+          </div>
+        </div>
+      </div>
+
+      <script type="text/ng-template" id="login.html">
+        <div class="col-md-12">
+          <h3>Login Page</h3>
+          
+          <form ng-submit="formSubmit()" class="form">
+            <div class="col-md-4">
+              <div class="form-group">
+                <input type="text" class="form-control" ng-model="username" placeholder="username" required=""/>
+              </div> 
+
+              <div class="form-group">
+                <input type="password" class="form-control" ng-model="password" placeholder="password" required=""/>
+              </div>
+
+              <div class="form-group">
+                <button type="submit" class="btn btn-success">Login</button>
+                <span class="text-danger">{{ error }}</span>
+              </div>
+
+            </div>
+          </form>
+        </div>
+      </script>
+
+      <script type="text/ng-template" id="profile.html">
+        <div class="col-md-12">
+          <h3>Profile</h3>
+        
+          <a ng-click="logout()">Logout</a>
+        </div>
+      </script>
+    </div>
+  </body>
+</html>
