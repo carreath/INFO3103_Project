@@ -1,19 +1,25 @@
 (function() {
   var app = angular.module('myApp', ['ui.router']);
   
+
   //Main run function
   app.run(function($rootScope, $location, $state, LoginService) {
     $rootScope.$on('$stateChangeStart', 
       function(event, toState, toParams, fromState, fromParams){ 
           console.log('Changed state to: ' + toState);
     
+        //If not logged in on one of these pages redirect to login
+        var authRequired = {'/':"", '/profile':"", '/profile/edit':"", '/post/starred':"", '/post/followed':"", 'post/new':"", 'post/edit':""};
+
         LoginService.isAuthenticated().then(
           function(data) {
             if($state.current['url'] == '/' || $state.current['url'] == '/login') {
               $state.transitionTo('profile');
             }
           }, function(data) {
-            $state.transitionTo('login');
+            if($state.current['url'] in authRequired) {
+              $state.transitionTo('login');
+            }
           });
       });
   });
@@ -32,20 +38,30 @@
         templateUrl : 'profile.html',
         controller : 'ProfileController'
       })
+      .state('editProfile', {
+        url : '/profile/edit',
+        templateUrl : 'edit-profile.html',
+        controller : 'EditProfileController'
+      })
       .state('posts', {
         url : '/post',
         templateUrl : 'posts.html',
         controller : 'PostController'
       })
       .state('post', {
-        url : '/post',
-        templateUrl : 'post.html',
-        controller : 'NewPostController'
+        url : '/post/view/:id',
+        templateUrl : 'viewPost.html',
+        controller : 'ViewPostController'
       })
       .state('newPost', {
         url : '/post/new',
         templateUrl : 'new-post.html',
         controller : 'NewPostController'
+      })
+      .state('editPost', {
+        url : '/post/edit',
+        templateUrl : 'edit-post.html',
+        controller : 'EditPostController'
       });
   }]);
 
@@ -64,38 +80,6 @@
     };   
   });
 
-  app.controller('NewPostController', function($scope, $http, $rootScope, $stateParams, $state, LoginService) {
-    $rootScope.title = "Meme Machine";
-
-    $scope.uploadFile = function(files) {
-        var fd = new FormData();
-        //Take the first selected file
-        fd.append("image", files[0]);
-
-        $http.post('http://info3103.cs.unb.ca:14637/img', fd, {
-            withCredentials: true,
-            headers: {'Content-Type': undefined },
-            transformRequest: angular.identity
-        }).success(function(data) {
-          $scope.image_id = data.image_id['LAST_INSERT_ID()'];
-        });
-
-    };
-
-    $scope.formSubmit = function() {
-      console.log( {'image_id': $scope.image_id, 'title': $scope.title, 'description': $scope.description, 'tags': [$scope.tags]});
-      $http.post('http://info3103.cs.unb.ca:14637/post', {'image_id': $scope.image_id, 'title': $scope.title, 'description': $scope.description, 'tags': [$scope.tags]}).success(function(data) {        
-        $scope.image_id = '';
-        $scope.title = '';
-        $scope.description = '';
-        $state.transitionTo('post'); 
-      }).error(function(data) {
-        console.log(data);
-        $scope.error = "Incorrect username/password!";
-      });
-    };   
-  });
-  
   app.controller('ProfileController', function($scope, $rootScope, $stateParams, $state, LoginService) {
     $rootScope.title = "AngularJS Profile Sample";
     
@@ -105,25 +89,14 @@
       $state.transitionTo('login');
     };
 
-    $scope.post = function() {
-      $state.transitionTo('post');
+    $scope.posts = function() {
+      $state.transitionTo('posts');
     };
   });
-  
-  app.factory('LoginService', function($http) {
-    var admin = 'admin';
-    var pass = 'pass';
-    var isAuthenticated = false;
-    
-    return {
-      logout : function() {
-        $http.delete('http://info3103.cs.unb.ca:14637/login');
-      },
-      isAuthenticated : function() {
-        return $http.get('http://info3103.cs.unb.ca:14637/login');
-      }
-    };
-    
+
+  app.controller('EditProfileController', function($scope, $rootScope, $stateParams, $state, LoginService) {
+    $rootScope.title = "AngularJS Profile Sample";
+
   });
 
   app.controller('PostController', function($scope, $rootScope, $stateParams, $state, PostService, $http) {
@@ -163,23 +136,84 @@
     $scope.createPost = function() {
       $state.transitionTo('newPost');
     }
+
+    $scope.goToPost = function(post) {
+      $state.transitionTo('post', {'id': post['id']});
+    }
   });
 
 
+  app.controller('ViewPostController', function($scope, $rootScope, $stateParams, $state, PostService) {
+    $rootScope.title = "AngularJS Profile Sample";
+
+    console.log($stateParams);
+    PostService.getPost($stateParams['id']).success(function(data) {
+      console.log(data);
+      $scope.post = data.post;
+    })
+    .error(function() {
+
+    });
+  });
+
+  app.controller('NewPostController', function($scope, $http, $rootScope, $stateParams, $state, LoginService) {
+    $rootScope.title = "Meme Machine";
+
+    $scope.uploadFile = function(files) {
+        var fd = new FormData();
+        //Take the first selected file
+        fd.append("image", files[0]);
+
+        $http.post('http://info3103.cs.unb.ca:14637/img', fd, {
+            withCredentials: true,
+            headers: {'Content-Type': undefined },
+            transformRequest: angular.identity
+        }).success(function(data) {
+          $scope.image_id = data.image_id['LAST_INSERT_ID()'];
+        });
+
+    };
+
+    $scope.formSubmit = function() {
+      console.log( {'image_id': $scope.image_id, 'title': $scope.title, 'description': $scope.description, 'tags': [$scope.tags]});
+      $http.post('http://info3103.cs.unb.ca:14637/post', {'image_id': $scope.image_id, 'title': $scope.title, 'description': $scope.description, 'tags': [$scope.tags]}).success(function(data) {        
+        $scope.image_id = '';
+        $scope.title = '';
+        $scope.description = '';
+        $state.transitionTo('post'); 
+      }).error(function(data) {
+        console.log(data);
+        $scope.error = "Incorrect username/password!";
+      });
+    };   
+  });
+  
+  app.controller('EditPostController', function($scope, $rootScope, $stateParams, $state, LoginService) {
+    $rootScope.title = "AngularJS Profile Sample";
+
+  });
+
+  app.factory('LoginService', function($http) {
+    var admin = 'admin';
+    var pass = 'pass';
+    var isAuthenticated = false;
+    
+    return {
+      logout : function() {
+        $http.delete('http://info3103.cs.unb.ca:14637/login');
+      },
+      isAuthenticated : function() {
+        return $http.get('http://info3103.cs.unb.ca:14637/login');
+      }
+    };
+    
+  });
+
   app.factory('PostService', function($http) {    
     return {
-      newPost : function(post) {
-      	//Post CODE HERE
-        //$post the new post
-        return isAuthenticated;
-      },
-      updatePost : function() {
-      	//DE-AUTHENTICATION CODE HERE
-        isAuthenticated = false;
-      },
       getPost : function(id) {
       	//Get POST of id == id
-        return isAuthenticated;
+        return $http.get('http://info3103.cs.unb.ca:14637/post?post_id=' + id);
       },
       getRecentPosts : function() {
         return $http.get('http://info3103.cs.unb.ca:14637/post/recent');

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/app.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.min.js"></script>
@@ -63,7 +64,7 @@
         <div class="col-md-12">
           <h3>Profile</h3>
         
-          <input type="button" value="Post" ng-click="post()">
+          <input type="button" value="Post" ng-click="posts()">
           <input type="button" value="logout" ng-click="logout()">
         </div>
       </script>
@@ -79,37 +80,49 @@
           <input type="button" value="Create Post" ng-click="createPost()">
           <input type="button" value="Back" onclick="goBack()">
         </div>
-        <table class='table table-striped'>
-          <thead>
-            <th style="width:33%"></th>
-            <th style="width:33%"></th>
-            <th style="width:33%"></th>
-          </thead>
-          <tbody>
-            <tr ng-repeat="chunk in chunkedData">
-              <td ng-repeat="post in chunk">
-                <img ng-src="images/{{post.uri}}" style="height: 100px">
-                <a style="color: #c50e0e" href="http://info3103.cs.unb.ca:14637/post?post_id={{post.id}}">[http://info3103.cs.unb.ca:14637/post?post_id={{post.id}}]</a>
-                <p>{{post.title}}</p>
-                <p>{{post.description}}</p>
-                <p>{{post.profile_id}}</p>
-              </td>
-            </tr>
-        </tbody>
-        </table>
+        <div class="col-md-12">
+          <table class='table table-striped' style="width:100%">
+            <thead>
+              <th class="col-md-3"></th>
+              <th class="col-md-3"></th>
+              <th class="col-md-3"></th>
+              <th class="col-md-3"></th>
+            </thead>
+            <tbody>
+              <tr ng-repeat="chunk in chunkedData">
+                <td ng-repeat="post in chunk" class="col-md-3 meme-holder">
+                  <div  class="img-holder">
+                    <img ng-src="images/{{post.uri}}">
+                  </div>
+                  <a style="color: #c50e0e" ng-click="goToPost(post)">[view]</a>
+                  <div>
+                    <p>{{post.title}}</p>
+                    <p>{{post.description}}</p>
+                    <p>{{post.profile_id}}</p>
+                  </div>
+                </td>
+              </tr>
+          </tbody>
+          </table>
+        </div>
       </script>
 
-      <script type="text/ng-template" id="post.html">
+      <script type="text/ng-template" id="viewPost.html">
         <div class="col-md-12">
           <h3>POST</h3>
+
           <input type="button" value="Back" onclick="goBack()">
         </div>
-        <div>
-          <img ng-src="{{getImage(post.image_id)}}" style="height: 500px">
-          <a style="color: #c50e0e" href="http://info3103.cs.unb.ca:14637/post?post_id={{post.id}}">[http://info3103.cs.unb.ca:14637/post?post_id={{post.id}}]</a>
-          <p>{{post.title}}</p>
-          <p>{{post.description}}</p>
-          <p>{{post.profile_id}}</p>
+        <div class="col-md-12 meme-holder">
+          <div  class="img-holder">
+            <img ng-src="images/{{post.uri}}">
+          </div>
+          <div>
+            <p>{{post.title}}</p>
+            <p>{{post.description}}</p>
+            <p>{{post.profile_id}}</p>
+          </div>
+        </div>
         </div>
       </script>
 

@@ -1,0 +1,24 @@
+.img-holder {
+  	position: relative;
+	max-height: inherit;
+	max-width: inherit;
+	height: 100%;
+	width: 100%;
+    overflow: hidden;
+    background-color: black; 
+}
+.img-holder img {
+	position: relative;
+	display: block;
+	height: inherit;
+}
+
+.meme-holder {
+    max-width: 200px;
+    max-height: 200px !important;
+    width: 200px;
+    height: 200px !important;
+    border-width: 3px;
+    border-color: #f1f1f1;
+    border-style: solid;
+}
